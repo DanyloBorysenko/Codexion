@@ -5,7 +5,8 @@ RM = rm -f
 HEADER = codexion.h
 MY_SRC = arg_parser.c   \
          main.c         \
-		 time_counter.c
+		 time_counter.c \
+		 threads.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

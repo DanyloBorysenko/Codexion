@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/26 14:37:45 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/26 23:30:16 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <sys/time.h>
+# include <pthread.h>
 
 typedef struct s_config
 {
@@ -34,5 +35,6 @@ typedef struct s_config
 
 t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long	get_current_time(struct timeval* tv);
+void		start_to_work(t_config *config);
 
 #endif
