@@ -6,17 +6,48 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/25 18:17:26 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/26 12:58:11 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+void	terminate_program(char *msg)
+{
+	printf("%s\n", msg);
+	exit(EXIT_FAILURE);
+}
+
+int	strict_atoi(char *str)
+{
+	long	res;
+	int		i;
+
+	res = 0;
+	i = 0;
+	if (!str || str[i] == '\0')
+		terminate_program("Empty string found");
+	if (str[i] == '+')
+		i++;
+	else if (str[i] == '-')
+		terminate_program("Negative argument found");
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			terminate_program("Not numeric digit found");
+		res = res * 10 + (str[i] - '0');
+		if (res > INT_MAX)
+			terminate_program("Argument bigger that 2147483647 found");
+		i++;
+	}
+	return ((int)res);
+}
+
 int	is_sched_val_correct(char *scheduler_value, char **possible_schedul_val)
 {
 	int	i;
 	int	is_correct;
-	
+
 	i = 0;
 	while (possible_schedul_val[i])
 	{
@@ -31,7 +62,7 @@ int	is_sched_val_correct(char *scheduler_value, char **possible_schedul_val)
 t_config	*create_config(int *args, char *scheduler_value)
 {
 	t_config	*config;
-	
+
 	config = malloc(sizeof(t_config));
 	if (!config)
 		return (NULL);
@@ -49,7 +80,6 @@ t_config	*create_config(int *args, char *scheduler_value)
 t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
 {
 	int	i;
-	int	arg;
 	int	args[7];
 
 	if (argc != 9)
@@ -58,20 +88,11 @@ t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
 		exit(EXIT_FAILURE);
 	}
 	if (is_sched_val_correct(argv[8], possible_schedul_val) == -1)
-	{
-		printf("Not correct scheduler");
-		exit(EXIT_FAILURE);
-	}
+		terminate_program("Not correct scheduler");
 	i = 0;
-	while (i < 7)
+	while (i < argc - 2)
 	{
-		arg = atoi(argv[i + 1]);
-		if (arg < 0)
-		{
-			printf("Argument can not be negative or bigger than 2147483647");
-			exit(EXIT_FAILURE);
-		}
-		args[i] = arg;
+		args[i] = strict_atoi(argv[i + 1]);
 		i++;
 	}
 	return (create_config(args, argv[8]));
