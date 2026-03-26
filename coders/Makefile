@@ -1,0 +1,27 @@
+NAME=codexion
+CC = cc
+FLAGS = -Wall -Wextra -Werror
+RM = rm -f
+HEADER = codexion.h
+MY_SRC = arg_parser.c   \
+         main.c         \
+		 time_counter.c
+OBJ = $(MY_SRC:.c=.o)
+
+all: $(NAME)
+
+$(NAME): $(OBJ)
+	$(CC) $(FLAGS) $(OBJ) -o $(NAME)
+
+%.o: %.c $(HEADER)
+	$(CC) $(FLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(OBJ)
+
+fclean: clean
+	$(RM) $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re
