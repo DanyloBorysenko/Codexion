@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/27 17:43:51 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/27 17:56:13 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,9 @@ void *routine(void* arg)
 	t_coder *coder;
 
 	coder = (t_coder *)arg;
-
+	coder->compiles_done += 1;
 	printf("time: %llu, Thread id: %d\n", get_current_time(&tv) - coder->config->start, coder->id);
+	printf("compiles done - %d\n", coder->compiles_done);
 	return(NULL);
 }
 
@@ -39,6 +40,7 @@ t_coder	*init_coders(t_config *config)
 	{
 		coders[i].id = i + 1;
 		coders[i].config = config;
+		coders[i].compiles_done = 0;
 		i++;
 	}
 	return (coders);

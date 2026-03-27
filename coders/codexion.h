@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/27 17:14:29 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/27 17:52:37 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,11 +33,13 @@ typedef struct s_config
 	char	*scheduler;
 	long long start;
 }				t_config;
+
 typedef struct s_coder
 {
-	int	id;
+	int			id;
 	pthread_t	thread;
 	t_config	*config;
+	int			compiles_done;
 }				t_coder;
 
 
