@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/26 12:58:11 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/27 16:55:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,25 +59,26 @@ int	is_sched_val_correct(char *scheduler_value, char **possible_schedul_val)
 	return (-1);
 }
 
-t_config	*create_config(int *args, char *scheduler_value)
+t_config	*create_config(int *args, char *scheduler_value, long long start)
 {
 	t_config	*config;
 
 	config = malloc(sizeof(t_config));
 	if (!config)
 		return (NULL);
-	config->number_of_coders = args[1];
-	config->time_to_burnout = args[2];
-	config->time_to_compile = args[3];
-	config->time_to_debug = args[4];
-	config->time_to_refactor = args[5];
-	config->number_of_compiles_required = args[6];
-	config->dongle_cooldown = args[7];
+	config->number_of_coders = args[0];
+	config->time_to_burnout = args[1];
+	config->time_to_compile = args[2];
+	config->time_to_debug = args[3];
+	config->time_to_refactor = args[4];
+	config->number_of_compiles_required = args[5];
+	config->dongle_cooldown = args[6];
 	config->scheduler = scheduler_value;
+	config->start = start;
 	return (config);
 }
 
-t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
+t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val, long long start)
 {
 	int	i;
 	int	args[7];
@@ -95,5 +96,5 @@ t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
 		args[i] = strict_atoi(argv[i + 1]);
 		i++;
 	}
-	return (create_config(args, argv[8]));
+	return (create_config(args, argv[8], start));
 }

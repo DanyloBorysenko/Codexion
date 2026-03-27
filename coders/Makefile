@@ -6,13 +6,13 @@ HEADER = codexion.h
 MY_SRC = arg_parser.c   \
          main.c         \
 		 time_counter.c \
-		 threads.c
+		 coders.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(FLAGS) $(OBJ) -g -o $(NAME)
 
 %.o: %.c $(HEADER)
 	$(CC) $(FLAGS) -c $< -o $@

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/26 23:30:16 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/27 17:14:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,17 @@ typedef struct s_config
 	int		number_of_compiles_required;
 	int		dongle_cooldown;
 	char	*scheduler;
+	long long start;
 }				t_config;
+typedef struct s_coder
+{
+	int	id;
+	pthread_t	thread;
+	t_config	*config;
+}				t_coder;
 
-t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val);
+
+t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val, long long start);
 long long	get_current_time(struct timeval* tv);
 void		start_to_work(t_config *config);
 
