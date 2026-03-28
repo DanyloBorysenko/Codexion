@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/27 17:52:37 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/28 15:23:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,15 +36,16 @@ typedef struct s_config
 
 typedef struct s_coder
 {
-	int			id;
-	pthread_t	thread;
-	t_config	*config;
-	int			compiles_done;
+	int				id;
+	pthread_t		thread;
+	t_config		*config;
+	int				compiles_done;
+	pthread_mutex_t	*print_lock;
 }				t_coder;
 
 
-t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val, long long start);
+t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long	get_current_time(struct timeval* tv);
-void		start_to_work(t_config *config);
+void		start_to_work(t_config *config, pthread_mutex_t *print_lock);
 
 #endif
