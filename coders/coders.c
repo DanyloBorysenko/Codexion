@@ -6,32 +6,34 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/28 15:12:36 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/28 16:05:42 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void *routine(void* arg)
+void log_event(t_coder *coder, char *msg)
 {
 	struct timeval	tv;
+
+	pthread_mutex_lock(coder->print_lock);
+	printf("%lld %d %s\n", get_current_time(&tv) - coder->config->start, coder->id, msg);
+	pthread_mutex_unlock(coder->print_lock);
+}
+
+void *routine(void* arg)
+{
 	t_coder 		*coder;
 
 	coder = (t_coder *)arg;
 	while (coder->compiles_done < coder->config->number_of_compiles_required)
 	{
-		pthread_mutex_lock(coder->print_lock);
-		printf("%lld %d is compiling\n", get_current_time(&tv) - coder->config->start, coder->id);
-		pthread_mutex_unlock(coder->print_lock);
+		log_event(coder, "is compiling");
 		usleep((coder->config->time_to_compile) * 1000);
 		coder->compiles_done++;
-		pthread_mutex_lock(coder->print_lock);
-		printf("%lld %d is debugging\n", get_current_time(&tv) - coder->config->start, coder->id);
-		pthread_mutex_unlock(coder->print_lock);
+		log_event(coder, "is debugging");
 		usleep((coder->config->time_to_debug) * 1000);
-		pthread_mutex_lock(coder->print_lock);
-		printf("%lld %d is refuctoring\n", get_current_time(&tv) - coder->config->start, coder->id);
-		pthread_mutex_unlock(coder->print_lock);
+		log_event(coder, "is refactoring");
 		usleep((coder->config->time_to_refactor) * 1000);
 	}
 	return(NULL);
