@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/28 20:54:20 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/29 17:44:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,10 @@ typedef struct coder_s
 
 typedef struct monitor_arg_s
 {
-	coder_t		*coders;
-	t_config	*config;
+	coder_t			*coders;
+	t_config		*config;
+	pthread_mutex_t	*print_lock;
+	int				*is_simul_alive;
 }				monitor_arg_t;
 
 
