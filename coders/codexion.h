@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/29 17:44:02 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/30 00:37:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,21 +41,23 @@ typedef struct coder_s
 	t_config		*config;
 	int				compiles_done;
 	pthread_mutex_t	*print_lock;
+	pthread_mutex_t *simul_lock;
 	long long		last_compile_start_time;
+	int				*is_simul_alive;
 }				coder_t;
 
 typedef struct monitor_arg_s
 {
 	coder_t			*coders;
 	t_config		*config;
-	pthread_mutex_t	*print_lock;
 	int				*is_simul_alive;
+	pthread_mutex_t *simul_lock;
 }				monitor_arg_t;
 
 
 
 t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long	get_current_time(struct timeval* tv);
-void		start_to_work(t_config *config, pthread_mutex_t *print_lock);
+void start_to_work(t_config *config, pthread_mutex_t *print_lock, pthread_mutex_t *simul_lock);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/29 17:49:18 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/30 00:40:20 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ int	main(int argc, char	**argv)
 	char		*scheduler_values[3];
 	struct timeval tv;
 	pthread_mutex_t print_lock;
+	pthread_mutex_t simul_lock;
 	long long start;
 
 	start = get_current_time(&tv);
@@ -28,7 +29,7 @@ int	main(int argc, char	**argv)
 	configuration = parse_arg(argc, argv, scheduler_values);
 	configuration->start = start;
 	pthread_mutex_init(&print_lock, NULL);
-	start_to_work(configuration, &print_lock);
+	start_to_work(configuration, &print_lock, &simul_lock);
 	pthread_mutex_destroy(&print_lock);
 	free(configuration);
 	return (0);
