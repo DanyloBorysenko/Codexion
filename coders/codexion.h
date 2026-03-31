@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/30 00:37:29 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/31 18:11:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,16 @@ typedef struct s_config
 	char	*scheduler;
 	long long start;
 }				t_config;
+
+typedef struct locks_s
+{
+	pthread_mutex_t	print_lock;
+	pthread_mutex_t	simul_lock;
+	pthread_mutex_t	compl_lock;
+	pthread_mutex_t	last_compl_lock;
+	int				count;
+}				locks_t;
+
 
 typedef struct coder_s
 {

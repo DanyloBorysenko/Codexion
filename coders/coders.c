@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/30 01:05:40 by danborys         ###   ########.fr       */
+/*   Updated: 2026/03/31 17:50:59 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,26 +19,42 @@ void log_event(coder_t *coder, char *msg, long long timestamp)
 	pthread_mutex_unlock(coder->print_lock);
 }
 
+// function return 1 if simulation must be stoped
+int	stop_simul(coder_t *coder)
+{
+	int	i;
+	int coders_finished;
+
+	i = 0;
+	coders_finished = 0;
+	while (i < coder->config->number_of_coders)
+	{
+		pthread_mutex_lock(coder[i].simul_lock);
+		if (coder[i].compiles_done >= coder[i].config->number_of_compiles_required)
+			coders_finished++;
+		pthread_mutex_unlock(coder[i].simul_lock);
+		i++;
+	}
+	return (coders_finished == coder->config->number_of_coders);
+}
+
 void *monitor_routine(void *arg)
 {
 	int	i;
 	monitor_arg_t *m_arg;
-
+	int	stop;
+	
 	m_arg = (monitor_arg_t *)arg;
-	while (*(m_arg->is_simul_alive))
+	stop = 0;
+	while (stop == 0)
 	{
 		i = 0;
-		while (i < m_arg->config->number_of_coders)
+		if (stop_simul(m_arg->coders) == 1)
 		{
-			if (m_arg->coders[i].compiles_done < m_arg->config->number_of_compiles_required)
-				break;
-			if (i == m_arg->config->number_of_coders - 1)
-			{
-				pthread_mutex_lock(m_arg->simul_lock);
-				*(m_arg->is_simul_alive) = 0;
-				pthread_mutex_unlock(m_arg->simul_lock);
-			}
-			i++;
+			pthread_mutex_lock(m_arg->simul_lock);
+			*(m_arg->is_simul_alive) = 0;
+			stop = 1;
+			pthread_mutex_unlock(m_arg->simul_lock);
 		}
 		usleep(1000);
 	}
@@ -50,15 +66,17 @@ void *coders_routine(void* arg)
 	coder_t 		*coder;
 	struct timeval	tv;
 	int	stop;
-
 	coder = (coder_t *)arg;
+	
 	stop = 0;
 	while (stop == 0)
 	{
 		coder->last_compile_start_time = get_current_time(&tv) - coder->config->start;
 		log_event(coder, "is compiling", coder->last_compile_start_time);
 		usleep((coder->config->time_to_compile) * 1000);
+		pthread_mutex_lock(coder->simul_lock);
 		coder->compiles_done++;
+		pthread_mutex_unlock(coder->simul_lock);
 		log_event(coder, "is debugging", get_current_time(&tv) - coder->config->start);
 		usleep((coder->config->time_to_debug) * 1000);
 		log_event(coder, "is refactoring", get_current_time(&tv) - coder->config->start);
