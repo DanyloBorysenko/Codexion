@@ -6,7 +6,9 @@ HEADER = codexion.h
 MY_SRC = arg_parser.c   \
          main.c         \
 		 time_counter.c \
-		 coders.c
+		 coders.c       \
+		 locks.c        \
+		 simulation.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/31 18:11:02 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/01 23:28:13 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,17 @@ typedef struct s_config
 
 typedef struct locks_s
 {
-	pthread_mutex_t	print_lock;
-	pthread_mutex_t	simul_lock;
-	pthread_mutex_t	compl_lock;
-	pthread_mutex_t	last_compl_lock;
-	int				count;
+	pthread_mutex_t	*coder_state_locks;
+	pthread_mutex_t	*simul_state_lock;
+	pthread_mutex_t	*print_lock;
 }				locks_t;
+
+typedef struct simul_state_s
+{
+	int	*finished_coders;
+	int *burn_out_coders;
+	int	*is_simul_alive;
+}				simul_state_t;
 
 
 typedef struct coder_s
@@ -51,9 +56,11 @@ typedef struct coder_s
 	t_config		*config;
 	int				compiles_done;
 	pthread_mutex_t	*print_lock;
-	pthread_mutex_t *simul_lock;
+	pthread_mutex_t *simul_state_lock;
+	pthread_mutex_t *coder_state_lock;
 	long long		last_compile_start_time;
 	int				*is_simul_alive;
+	simul_state_t	*simul_state;
 }				coder_t;
 
 typedef struct monitor_arg_s
@@ -66,8 +73,13 @@ typedef struct monitor_arg_s
 
 
 
-t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val);
-long long	get_current_time(struct timeval* tv);
-void start_to_work(t_config *config, pthread_mutex_t *print_lock, pthread_mutex_t *simul_lock);
+t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
+long long		get_current_time(struct timeval* tv);
+void 			start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state);
+pthread_mutex_t	*init_mutexes(int count);
+locks_t	*create_locks(int coders_count);
+void	destroy_locks(locks_t *ptr, int coders_count);
+simul_state_t	*init_simul(void);
+void free_simul(simul_state_t *simul);
 
 #endif

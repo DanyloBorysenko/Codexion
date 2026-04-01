@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/31 17:50:59 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/01 23:38:44 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ int	stop_simul(coder_t *coder)
 	coders_finished = 0;
 	while (i < coder->config->number_of_coders)
 	{
-		pthread_mutex_lock(coder[i].simul_lock);
+		pthread_mutex_lock(coder[i].coder_state_lock);
 		if (coder[i].compiles_done >= coder[i].config->number_of_compiles_required)
 			coders_finished++;
-		pthread_mutex_unlock(coder[i].simul_lock);
+		pthread_mutex_unlock(coder[i].coder_state_lock);
 		i++;
 	}
 	return (coders_finished == coder->config->number_of_coders);
@@ -40,15 +40,13 @@ int	stop_simul(coder_t *coder)
 
 void *monitor_routine(void *arg)
 {
-	int	i;
 	monitor_arg_t *m_arg;
 	int	stop;
-	
+
 	m_arg = (monitor_arg_t *)arg;
 	stop = 0;
 	while (stop == 0)
 	{
-		i = 0;
 		if (stop_simul(m_arg->coders) == 1)
 		{
 			pthread_mutex_lock(m_arg->simul_lock);
@@ -67,68 +65,71 @@ void *coders_routine(void* arg)
 	struct timeval	tv;
 	int	stop;
 	coder = (coder_t *)arg;
-	
+
 	stop = 0;
 	while (stop == 0)
 	{
 		coder->last_compile_start_time = get_current_time(&tv) - coder->config->start;
 		log_event(coder, "is compiling", coder->last_compile_start_time);
 		usleep((coder->config->time_to_compile) * 1000);
-		pthread_mutex_lock(coder->simul_lock);
 		coder->compiles_done++;
-		pthread_mutex_unlock(coder->simul_lock);
+		if (coder->compiles_done == coder->config->number_of_compiles_required)
+		{
+			pthread_mutex_lock(coder->simul_state_lock);
+			*(coder->simul_state->finished_coders) = *(coder->simul_state->finished_coders) + 1;
+			pthread_mutex_unlock(coder->simul_state_lock);
+		}
 		log_event(coder, "is debugging", get_current_time(&tv) - coder->config->start);
 		usleep((coder->config->time_to_debug) * 1000);
 		log_event(coder, "is refactoring", get_current_time(&tv) - coder->config->start);
 		usleep((coder->config->time_to_refactor) * 1000);
-		pthread_mutex_lock(coder->simul_lock);
-		if (*(coder->is_simul_alive) == 0)
+		pthread_mutex_lock(coder->simul_state_lock);
+		if (*(coder->simul_state->is_simul_alive) == 0)
 			stop = 1;
-		pthread_mutex_unlock(coder->simul_lock);
+		pthread_mutex_unlock(coder->simul_state_lock);
 	}
 	return(NULL);
 }
 
-coder_t	*init_coders(t_config *config, pthread_mutex_t *print_lock, int *is_simul_alive, pthread_mutex_t *simul_lock)
+coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_state)
 {
 	coder_t		*coders;
+	pthread_mutex_t *coders_state_locks;
 	int			i;
 
+	coders_state_locks = locks->coder_state_locks;
 	coders = malloc(sizeof(coder_t) * config->number_of_coders);
 	if (!coders)
-	{
-		printf("Coders were not created\n");
-		exit(EXIT_FAILURE);
-	}
+		return (NULL);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
 		coders[i].id = i + 1;
 		coders[i].config = config;
 		coders[i].compiles_done = 0;
-		coders[i].print_lock = print_lock;
-		coders[i].is_simul_alive = is_simul_alive;
-		coders[i].simul_lock = simul_lock;
+		coders[i].print_lock = locks->print_lock;
+		coders[i].is_simul_alive = simul_state->is_simul_alive;
+		coders[i].simul_state_lock = locks->simul_state_lock;
+		coders[i].coder_state_lock = &coders_state_locks[i];
+		coders[i].simul_state = simul_state;
 		i++;
 	}
 	return (coders);
 }
 
-void start_to_work(t_config *config, pthread_mutex_t *print_lock, pthread_mutex_t *simul_lock)
+void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 {
 	coder_t			*coders;
 	pthread_t		monitor;
 	monitor_arg_t	*m_arg;
 	int	i;
-	int	is_sim_alive;
 
-	is_sim_alive = 1;
-	coders = init_coders(config, print_lock, &is_sim_alive, simul_lock);
+	coders = init_coders(config, locks, simul_state);
 	m_arg = malloc(sizeof(monitor_arg_t));
 	m_arg->coders = coders;
 	m_arg->config = config;
-	m_arg->is_simul_alive = &is_sim_alive;
-	m_arg->simul_lock = simul_lock;
+	m_arg->is_simul_alive = simul_state->is_simul_alive;
+	m_arg->simul_lock = locks->simul_state_lock;
 
 	i = 0;
 	while (i < config->number_of_coders)
