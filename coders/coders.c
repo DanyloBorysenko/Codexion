@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/01 23:38:44 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 09:04:15 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,22 +20,11 @@ void log_event(coder_t *coder, char *msg, long long timestamp)
 }
 
 // function return 1 if simulation must be stoped
-int	stop_simul(coder_t *coder)
+int	stop_simul(simul_state_t *simul, t_config *config)
 {
-	int	i;
-	int coders_finished;
-
-	i = 0;
-	coders_finished = 0;
-	while (i < coder->config->number_of_coders)
-	{
-		pthread_mutex_lock(coder[i].coder_state_lock);
-		if (coder[i].compiles_done >= coder[i].config->number_of_compiles_required)
-			coders_finished++;
-		pthread_mutex_unlock(coder[i].coder_state_lock);
-		i++;
-	}
-	return (coders_finished == coder->config->number_of_coders);
+	if (*(simul->finished_coders) == config->number_of_coders)
+		return (1);
+	return (0);
 }
 
 void *monitor_routine(void *arg)
@@ -47,10 +36,10 @@ void *monitor_routine(void *arg)
 	stop = 0;
 	while (stop == 0)
 	{
-		if (stop_simul(m_arg->coders) == 1)
+		if (stop_simul(m_arg->simul_state, m_arg->config) == 1)
 		{
 			pthread_mutex_lock(m_arg->simul_lock);
-			*(m_arg->is_simul_alive) = 0;
+			*(m_arg->simul_state->is_simul_alive) = 0;
 			stop = 1;
 			pthread_mutex_unlock(m_arg->simul_lock);
 		}
@@ -94,10 +83,8 @@ void *coders_routine(void* arg)
 coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_state)
 {
 	coder_t		*coders;
-	pthread_mutex_t *coders_state_locks;
 	int			i;
 
-	coders_state_locks = locks->coder_state_locks;
 	coders = malloc(sizeof(coder_t) * config->number_of_coders);
 	if (!coders)
 		return (NULL);
@@ -108,9 +95,7 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_stat
 		coders[i].config = config;
 		coders[i].compiles_done = 0;
 		coders[i].print_lock = locks->print_lock;
-		coders[i].is_simul_alive = simul_state->is_simul_alive;
 		coders[i].simul_state_lock = locks->simul_state_lock;
-		coders[i].coder_state_lock = &coders_state_locks[i];
 		coders[i].simul_state = simul_state;
 		i++;
 	}
@@ -126,9 +111,8 @@ void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 
 	coders = init_coders(config, locks, simul_state);
 	m_arg = malloc(sizeof(monitor_arg_t));
-	m_arg->coders = coders;
 	m_arg->config = config;
-	m_arg->is_simul_alive = simul_state->is_simul_alive;
+	m_arg->simul_state = simul_state;
 	m_arg->simul_lock = locks->simul_state_lock;
 
 	i = 0;

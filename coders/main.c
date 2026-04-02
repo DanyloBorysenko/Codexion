@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/01 23:14:45 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 09:05:54 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@ int	main(int argc, char	**argv)
 	t_config	*configuration;
 	char		*scheduler_values[3];
 	struct timeval tv;
-	pthread_mutex_t *coder_locks;
 	locks_t			*locks;
 	simul_state_t *sim_state;
 	long long start;
@@ -27,15 +26,12 @@ int	main(int argc, char	**argv)
 	scheduler_values[1] = "edf";
 	scheduler_values[2] = NULL;
 	configuration = parse_arg(argc, argv, scheduler_values);
-	locks = create_locks(configuration->number_of_coders);
+	locks = create_locks();
 	configuration->start = start;
-	coder_locks = init_mutexes(configuration->number_of_coders);
 	sim_state = init_simul();
 	start_to_work(configuration, locks, sim_state);
-	destroy_locks(locks, configuration->number_of_coders);
-	free(locks);
+	destroy_and_free_locks(locks);
 	free(configuration);
-	free(coder_locks);
 	free_simul(sim_state);
 	return (0);
 }
