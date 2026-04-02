@@ -12,10 +12,7 @@ simul_state_t	*init_simul(void)
 	ptr->is_simul_alive = malloc(sizeof(int));
 	if (!ptr->burn_out_coders || !ptr->finished_coders || !ptr->is_simul_alive)
 	{
-		free(ptr->burn_out_coders);
-		free(ptr->finished_coders);
-		free(ptr->is_simul_alive);
-		free(ptr);
+		free_simul(ptr);
 		return (NULL);
 	}
 	*(ptr->burn_out_coders) = 0;

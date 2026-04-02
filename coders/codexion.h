@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 09:06:16 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 11:09:37 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ typedef struct coder_s
 	int				compiles_done;
 	pthread_mutex_t	*print_lock;
 	pthread_mutex_t *simul_state_lock;
-	long long		last_compile_start_time;
+	int				last_compile_time;
 	simul_state_t	*simul_state;
 }				coder_t;
 

@@ -6,16 +6,16 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 09:04:15 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 11:45:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void log_event(coder_t *coder, char *msg, long long timestamp)
+void log_event(coder_t *coder, char *msg, int timestamp)
 {
 	pthread_mutex_lock(coder->print_lock);
-	printf("%lld %d %s\n", timestamp, coder->id, msg);
+	printf("%d %d %s\n", timestamp, coder->id, msg);
 	pthread_mutex_unlock(coder->print_lock);
 }
 
@@ -24,6 +24,9 @@ int	stop_simul(simul_state_t *simul, t_config *config)
 {
 	if (*(simul->finished_coders) == config->number_of_coders)
 		return (1);
+	if (*(simul->burn_out_coders) > 0)
+		return (1);
+
 	return (0);
 }
 
@@ -54,12 +57,23 @@ void *coders_routine(void* arg)
 	struct timeval	tv;
 	int	stop;
 	coder = (coder_t *)arg;
+	int				current_time;
+	int				burn_out_time;
 
 	stop = 0;
 	while (stop == 0)
 	{
-		coder->last_compile_start_time = get_current_time(&tv) - coder->config->start;
-		log_event(coder, "is compiling", coder->last_compile_start_time);
+		current_time = get_current_time(&tv) - coder->config->start;
+		burn_out_time = coder->last_compile_time + coder->config->time_to_burnout;
+		printf("coder: %d, burn out time is %d\n",coder->id, burn_out_time);
+		if (current_time > burn_out_time)
+		{
+			pthread_mutex_lock(coder->simul_state_lock);
+			*(coder->simul_state->burn_out_coders) = *(coder->simul_state->burn_out_coders) + 1;
+			pthread_mutex_unlock(coder->simul_state_lock);
+		}
+		log_event(coder, "is compiling", current_time);
+		coder->last_compile_time = current_time;
 		usleep((coder->config->time_to_compile) * 1000);
 		coder->compiles_done++;
 		if (coder->compiles_done == coder->config->number_of_compiles_required)
@@ -94,6 +108,7 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_stat
 		coders[i].id = i + 1;
 		coders[i].config = config;
 		coders[i].compiles_done = 0;
+		coders[i].last_compile_time = 0;
 		coders[i].print_lock = locks->print_lock;
 		coders[i].simul_state_lock = locks->simul_state_lock;
 		coders[i].simul_state = simul_state;
@@ -114,7 +129,6 @@ void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 	m_arg->config = config;
 	m_arg->simul_state = simul_state;
 	m_arg->simul_lock = locks->simul_state_lock;
-
 	i = 0;
 	while (i < config->number_of_coders)
 	{
