@@ -1,3 +1,2 @@
-during coders initialisation last_compile_time was changed on start time
-log_event parameters were updated, to allow monitor and coders use this func
-
+-pthread flag was added to makefile
+burn_out_time was added to every coder

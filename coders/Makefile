@@ -1,6 +1,6 @@
 NAME=codexion
 CC = cc
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -pthread
 RM = rm -f
 HEADER = codexion.h
 MY_SRC = arg_parser.c   \

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/03 14:46:06 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/03 15:51:33 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,7 @@ void *coders_routine(void* arg)
 		log_event(coder->print_lock, coder->id, "is compiling", current_time - coder->config->start);
 		pthread_mutex_lock(coder->coder_lock);
 		coder->last_compile_time = current_time;
+		coder->burn_out_time = current_time + coder->config->time_to_burnout;
 		pthread_mutex_unlock(coder->coder_lock);
 		usleep((coder->config->time_to_compile) * 1000);
 		coder->compiles_done++;
@@ -120,6 +121,7 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_stat
 		coders[i].config = config;
 		coders[i].compiles_done = 0;
 		coders[i].last_compile_time = config->start;
+		coders[i].burn_out_time = config->start + config->time_to_burnout;
 		coders[i].print_lock = locks->print_lock;
 		coders[i].simul_state_lock = locks->simul_state_lock;
 		coders[i].coder_lock = &(locks->coder_state_locks[i]);
