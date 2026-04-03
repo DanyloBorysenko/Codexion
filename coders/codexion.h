@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 11:09:37 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 18:17:35 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ typedef struct locks_s
 typedef struct simul_state_s
 {
 	int	*finished_coders;
-	int *burn_out_coders;
 	int	*is_simul_alive;
 }				simul_state_t;
 
@@ -57,15 +56,17 @@ typedef struct coder_s
 	int				compiles_done;
 	pthread_mutex_t	*print_lock;
 	pthread_mutex_t *simul_state_lock;
-	int				last_compile_time;
+	pthread_mutex_t	*coder_lock;
+	long long		last_compile_time;
 	simul_state_t	*simul_state;
 }				coder_t;
 
 typedef struct monitor_arg_s
 {
 	t_config		*config;
+	coder_t			*coders;
 	pthread_mutex_t *simul_lock;
-	simul_state_t	*simul_state;
+	simul_state_t	*simul;
 }				monitor_arg_t;
 
 
@@ -73,9 +74,11 @@ typedef struct monitor_arg_s
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
 void 			start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state);
-locks_t	*create_locks(void);
-void	destroy_and_free_locks(locks_t *ptr);
+void			init_locks(locks_t *locks, int coders_count);
+void			destroy_locks(locks_t *locks, int coders_count);
+locks_t			*create_locks(int coders_count);
+void			free_locks(locks_t *ptr);
 simul_state_t	*init_simul(void);
-void free_simul(simul_state_t *simul);
+void			free_simul(simul_state_t *simul);
 
 #endif

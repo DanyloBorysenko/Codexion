@@ -1,38 +1,66 @@
 #include "codexion.h"
 
-pthread_mutex_t	*init_mutex(void)
+pthread_mutex_t	*alloc_mutex(int count)
 {
 	pthread_mutex_t *ptr;
 
-	ptr = malloc(sizeof(pthread_mutex_t));
+	ptr = malloc(sizeof(pthread_mutex_t) * count);
 	if (!ptr)
 		return (NULL);
-	pthread_mutex_init(ptr, NULL);
 	return (ptr);
 }
 
-locks_t	*create_locks(void)
+void init_locks(locks_t *locks, int coders_count)
+{
+	int	i;
+
+	i = 0;
+	while (i < coders_count)
+	{
+		pthread_mutex_init(&(locks->coder_state_locks[i]), NULL);
+		i++;
+	}
+	pthread_mutex_init(locks->print_lock, NULL);
+	pthread_mutex_init(locks->simul_state_lock, NULL);
+}
+
+void destroy_locks(locks_t *locks, int coders_count)
+{
+	int	i;
+
+	i = 0;
+	while (i < coders_count)
+	{
+		pthread_mutex_destroy(&(locks->coder_state_locks[i]));
+		i++;
+	}
+	pthread_mutex_destroy(locks->print_lock);
+	pthread_mutex_destroy(locks->simul_state_lock);
+}
+
+void	free_locks(locks_t *ptr)
+{
+	free(ptr->print_lock);
+	free(ptr->simul_state_lock);
+	free(ptr->coder_state_locks);
+	free(ptr);
+}
+
+locks_t	*create_locks(int coders_count)
 {
 	locks_t *locks;
 
 	locks = malloc(sizeof(locks_t));
-	locks->print_lock = init_mutex();
-	locks->simul_state_lock = init_mutex();
-	if (!locks->print_lock || !locks->simul_state_lock)
+	if (!locks)
+		return (NULL);
+	locks->coder_state_locks = alloc_mutex(coders_count);
+	locks->print_lock = alloc_mutex(1);
+	locks->simul_state_lock = alloc_mutex(1);
+	if (!locks->print_lock || !locks->simul_state_lock || !locks->coder_state_locks)
 	{
-		free(locks->print_lock);
-		free(locks->simul_state_lock);
-		free(locks);
+		free_locks(locks);
 		return (NULL);
 	}
+	init_locks(locks, coders_count);
 	return (locks);
-}
-
-void	destroy_and_free_locks(locks_t *ptr)
-{
-	pthread_mutex_destroy(ptr->print_lock);
-	pthread_mutex_destroy(ptr->simul_state_lock);
-	free(ptr->print_lock);
-	free(ptr->simul_state_lock);
-	free(ptr);
 }

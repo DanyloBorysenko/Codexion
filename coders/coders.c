@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 11:45:03 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 18:48:27 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,32 +19,51 @@ void log_event(coder_t *coder, char *msg, int timestamp)
 	pthread_mutex_unlock(coder->print_lock);
 }
 
-// function return 1 if simulation must be stoped
-int	stop_simul(simul_state_t *simul, t_config *config)
-{
-	if (*(simul->finished_coders) == config->number_of_coders)
-		return (1);
-	if (*(simul->burn_out_coders) > 0)
-		return (1);
-
-	return (0);
-}
-
 void *monitor_routine(void *arg)
 {
 	monitor_arg_t *m_arg;
+	struct timeval t;
+	long long current_time;
 	int	stop;
+	int	i;
 
 	m_arg = (monitor_arg_t *)arg;
 	stop = 0;
 	while (stop == 0)
 	{
-		if (stop_simul(m_arg->simul_state, m_arg->config) == 1)
+		i = 0;
+		while (i < m_arg->config->number_of_coders)
 		{
 			pthread_mutex_lock(m_arg->simul_lock);
-			*(m_arg->simul_state->is_simul_alive) = 0;
-			stop = 1;
+			if (*(m_arg->simul->finished_coders) == m_arg->config->number_of_coders)
+			{
+				stop = 1;
+				printf("Finished = all\n");
+			}
 			pthread_mutex_unlock(m_arg->simul_lock);
+			if (stop == 1)
+			{
+				pthread_mutex_lock(m_arg->simul_lock);
+				*(m_arg->simul->is_simul_alive) = 0;
+				pthread_mutex_unlock(m_arg->simul_lock);
+				break;
+			}
+			current_time =  get_current_time(&t);
+			pthread_mutex_lock(m_arg->coders[i].coder_lock);
+			if (current_time - m_arg->coders[i].last_compile_time > m_arg->config->time_to_burnout)
+			{
+				stop = 1;
+				log_event(&(m_arg->coders)[i], "borned out", current_time - m_arg->config->start);
+			}
+			pthread_mutex_unlock(m_arg->coders[i].coder_lock);
+			if (stop == 1)
+			{
+				pthread_mutex_lock(m_arg->simul_lock);
+				*(m_arg->simul->is_simul_alive) = 0;
+				pthread_mutex_unlock(m_arg->simul_lock);
+				break;
+			}
+			i++;
 		}
 		usleep(1000);
 	}
@@ -57,23 +76,16 @@ void *coders_routine(void* arg)
 	struct timeval	tv;
 	int	stop;
 	coder = (coder_t *)arg;
-	int				current_time;
-	int				burn_out_time;
+	long long		current_time;
 
 	stop = 0;
 	while (stop == 0)
 	{
-		current_time = get_current_time(&tv) - coder->config->start;
-		burn_out_time = coder->last_compile_time + coder->config->time_to_burnout;
-		printf("coder: %d, burn out time is %d\n",coder->id, burn_out_time);
-		if (current_time > burn_out_time)
-		{
-			pthread_mutex_lock(coder->simul_state_lock);
-			*(coder->simul_state->burn_out_coders) = *(coder->simul_state->burn_out_coders) + 1;
-			pthread_mutex_unlock(coder->simul_state_lock);
-		}
-		log_event(coder, "is compiling", current_time);
+		current_time = get_current_time(&tv);
+		log_event(coder, "is compiling", current_time - coder->config->start);
+		pthread_mutex_lock(coder->coder_lock);
 		coder->last_compile_time = current_time;
+		pthread_mutex_unlock(coder->coder_lock);
 		usleep((coder->config->time_to_compile) * 1000);
 		coder->compiles_done++;
 		if (coder->compiles_done == coder->config->number_of_compiles_required)
@@ -111,6 +123,7 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_stat
 		coders[i].last_compile_time = 0;
 		coders[i].print_lock = locks->print_lock;
 		coders[i].simul_state_lock = locks->simul_state_lock;
+		coders[i].coder_lock = &(locks->coder_state_locks[i]);
 		coders[i].simul_state = simul_state;
 		i++;
 	}
@@ -126,8 +139,11 @@ void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 
 	coders = init_coders(config, locks, simul_state);
 	m_arg = malloc(sizeof(monitor_arg_t));
+	if (!m_arg)
+		return;
 	m_arg->config = config;
-	m_arg->simul_state = simul_state;
+	m_arg->coders = coders;
+	m_arg->simul = simul_state;
 	m_arg->simul_lock = locks->simul_state_lock;
 	i = 0;
 	while (i < config->number_of_coders)

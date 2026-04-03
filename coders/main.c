@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 10:39:00 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/02 15:47:48 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 int	main(int argc, char	**argv)
 {
-	t_config	*configuration;
+	t_config	*config;
 	char		*scheduler_values[3];
 	locks_t			*locks;
 	simul_state_t *sim_state;
@@ -22,12 +22,13 @@ int	main(int argc, char	**argv)
 	scheduler_values[0] = "fifo";
 	scheduler_values[1] = "edf";
 	scheduler_values[2] = NULL;
-	configuration = parse_arg(argc, argv, scheduler_values);
-	locks = create_locks();
+	config = parse_arg(argc, argv, scheduler_values);
+	locks = create_locks(config->number_of_coders);
 	sim_state = init_simul();
-	start_to_work(configuration, locks, sim_state);
-	destroy_and_free_locks(locks);
-	free(configuration);
+	start_to_work(config, locks, sim_state);
+	destroy_locks(locks, config->number_of_coders);
+	free_locks(locks);
+	free(config);
 	free_simul(sim_state);
 	return (0);
 }
