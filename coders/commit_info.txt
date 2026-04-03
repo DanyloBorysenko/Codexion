@@ -1,4 +1,3 @@
-last_compile_start_time var was added to coder struct;
-s_coder, t_coder were changed to coder_s, coder_t;
-monitor_arg_s and monitor_routine were created;
+during coders initialisation last_compile_time was changed on start time
+log_event parameters were updated, to allow monitor and coders use this func
 
