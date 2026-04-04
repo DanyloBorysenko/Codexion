@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/03 15:51:33 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/04 11:15:44 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,10 +59,10 @@ void *monitor_routine(void *arg)
 				pthread_mutex_unlock(m_arg->simul_lock);
 				break;
 			}
-			if (stop == 1)
-				break;
 			i++;
 		}
+		if (stop == 1)
+			break;
 		usleep(1000);
 	}
 	return (NULL);

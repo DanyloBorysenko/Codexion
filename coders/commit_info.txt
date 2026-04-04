@@ -1,2 +1,1 @@
--pthread flag was added to makefile
-burn_out_time was added to every coder
+break logic was moved outside from loop i monitor_routine
