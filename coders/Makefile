@@ -3,12 +3,13 @@ CC = cc
 FLAGS = -Wall -Wextra -Werror -pthread
 RM = rm -f
 HEADER = codexion.h
-MY_SRC = arg_parser.c   \
-         main.c         \
-		 time_counter.c \
-		 coders.c       \
-		 locks.c        \
-		 simulation.c
+MY_SRC = arg_parser.c    \
+         main.c          \
+		 time_counter.c  \
+		 coders.c        \
+		 locks.c         \
+		 logger.c        \
+		 initialisation.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

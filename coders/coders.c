@@ -6,19 +6,11 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/04 11:15:44 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/04 16:17:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-void log_event(pthread_mutex_t *mut, int id, char *msg, int time)
-{
-	
-	pthread_mutex_lock(mut);
-	printf("%d %d %s\n", time, id, msg);
-	pthread_mutex_unlock(mut);
-}
 
 void *monitor_routine(void *arg)
 {
@@ -106,31 +98,6 @@ void *coders_routine(void* arg)
 	return(NULL);
 }
 
-coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul_state)
-{
-	coder_t		*coders;
-	int			i;
-
-	coders = malloc(sizeof(coder_t) * config->number_of_coders);
-	if (!coders)
-		return (NULL);
-	i = 0;
-	while (i < config->number_of_coders)
-	{
-		coders[i].id = i + 1;
-		coders[i].config = config;
-		coders[i].compiles_done = 0;
-		coders[i].last_compile_time = config->start;
-		coders[i].burn_out_time = config->start + config->time_to_burnout;
-		coders[i].print_lock = locks->print_lock;
-		coders[i].simul_state_lock = locks->simul_state_lock;
-		coders[i].coder_lock = &(locks->coder_state_locks[i]);
-		coders[i].simul_state = simul_state;
-		i++;
-	}
-	return (coders);
-}
-
 void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 {
 	coder_t			*coders;
@@ -139,13 +106,7 @@ void start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state)
 	int	i;
 
 	coders = init_coders(config, locks, simul_state);
-	m_arg = malloc(sizeof(monitor_arg_t));
-	if (!m_arg)
-		return;
-	m_arg->config = config;
-	m_arg->coders = coders;
-	m_arg->simul = simul_state;
-	m_arg->simul_lock = locks->simul_state_lock;
+	m_arg = init_monitor(config, locks, simul_state, coders);
 	i = 0;
 	while (i < config->number_of_coders)
 	{

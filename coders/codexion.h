@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/03 15:42:18 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/04 16:18:56 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,5 +81,10 @@ locks_t			*create_locks(int coders_count);
 void			free_locks(locks_t *ptr);
 simul_state_t	*init_simul(void);
 void			free_simul(simul_state_t *simul);
+void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
+monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
+	simul_state_t *simul_state,
+	coder_t *coders);
+coder_t			*init_coders(t_config *config, locks_t *locks, simul_state_t *simul);
 
 #endif
