@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 17:47:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 19:16:50 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ int	main(int argc, char	**argv)
 	t_config	*config;
 	char		*scheduler_values[3];
 	locks_t			*locks;
-	simul_state_t *sim_state;
+	simul_t *sim_state;
 
 	scheduler_values[0] = "fifo";
 	scheduler_values[1] = "edf";

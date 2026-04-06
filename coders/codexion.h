@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 18:01:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 19:17:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,12 @@ typedef struct locks_s
 	pthread_mutex_t	*print_lock;
 }				locks_t;
 
-typedef struct simul_state_s
+typedef struct simul_s
 {
 	int	finished_coders;
 	int	is_simul_alive;
 	long long start;
-}				simul_state_t;
+}				simul_t;
 
 
 typedef struct coder_s
@@ -59,7 +59,7 @@ typedef struct coder_s
 	pthread_mutex_t	*coder_lock;
 	long long		last_compile_time;
 	long long		burn_out_time;
-	simul_state_t	*simul;
+	simul_t	*simul;
 }				coder_t;
 
 typedef struct monitor_arg_s
@@ -67,23 +67,23 @@ typedef struct monitor_arg_s
 	t_config		*config;
 	coder_t			*coders;
 	pthread_mutex_t *simul_lock;
-	simul_state_t	*simul;
+	simul_t	*simul;
 }				monitor_arg_t;
 
 
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
-void 			start_to_work(t_config *config, locks_t *locks, simul_state_t *simul_state);
+void 			start_to_work(t_config *cfg, locks_t *locks, simul_t *simul);
 void			init_locks(locks_t *locks, int coders_count);
 void			destroy_locks(locks_t *locks, int coders_count);
 locks_t			*create_locks(int coders_count);
 void			free_locks(locks_t *ptr);
-simul_state_t	*init_simul(void);
+simul_t	*init_simul(void);
 void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
-	simul_state_t *simul_state,
+	simul_t *simul_state,
 	coder_t *coders);
-coder_t			*init_coders(t_config *config, locks_t *locks, simul_state_t *simul);
+coder_t			*init_coders(t_config *config, locks_t *locks, simul_t *simul);
 
 #endif

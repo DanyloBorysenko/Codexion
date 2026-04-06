@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 18:01:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 19:16:50 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 monitor_arg_t	*init_monitor(
 	t_config *config,
 	locks_t *locks,
-	simul_state_t *simul_state,
+	simul_t *simul_state,
 	coder_t *coders)
 {
 	monitor_arg_t	*m_arg;
@@ -30,7 +30,7 @@ monitor_arg_t	*init_monitor(
 	return (m_arg);
 }
 
-coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul)
+coder_t	*init_coders(t_config *config, locks_t *locks, simul_t *simul)
 {
 	coder_t		*coders;
 	int			i;
@@ -55,12 +55,12 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul)
 	return (coders);
 }
 
-simul_state_t	*init_simul(void)
+simul_t	*init_simul(void)
 {
-	simul_state_t	*ptr;
+	simul_t	*ptr;
 	struct timeval tv;
 
-	ptr = malloc(sizeof(simul_state_t));
+	ptr = malloc(sizeof(simul_t));
 	if (!ptr)
 		return (NULL);
 	ptr->finished_coders = 0;
