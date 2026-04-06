@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   monitor.c                                          :+:      :+:    :+:   */
+/*   initialisation.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/04 16:21:46 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 18:01:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,12 +44,12 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul)
 		coders[i].id = i + 1;
 		coders[i].config = config;
 		coders[i].compiles_done = 0;
-		coders[i].last_compile_time = config->start;
-		coders[i].burn_out_time = config->start + config->time_to_burnout;
+		coders[i].last_compile_time = simul->start;
+		coders[i].burn_out_time = simul->start + config->time_to_burnout;
 		coders[i].print_lock = locks->print_lock;
-		coders[i].simul_state_lock = locks->simul_state_lock;
+		coders[i].simul_lock = locks->simul_state_lock;
 		coders[i].coder_lock = &(locks->coder_state_locks[i]);
-		coders[i].simul_state = simul;
+		coders[i].simul = simul;
 		i++;
 	}
 	return (coders);
@@ -58,25 +58,13 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_state_t *simul)
 simul_state_t	*init_simul(void)
 {
 	simul_state_t	*ptr;
+	struct timeval tv;
 
 	ptr = malloc(sizeof(simul_state_t));
 	if (!ptr)
 		return (NULL);
-	ptr->finished_coders = malloc(sizeof(int));
-	ptr->is_simul_alive = malloc(sizeof(int));
-	if (!ptr->finished_coders || !ptr->is_simul_alive)
-	{
-		free_simul(ptr);
-		return (NULL);
-	}
-	*(ptr->finished_coders) = 0;
-	*(ptr->is_simul_alive) = 1;
+	ptr->finished_coders = 0;
+	ptr->is_simul_alive = 1;
+	ptr->start = get_current_time(&tv);
 	return (ptr);
-}
-
-void	free_simul(simul_state_t *simul)
-{
-	free(simul->finished_coders);
-	free(simul->is_simul_alive);
-	free(simul);
 }

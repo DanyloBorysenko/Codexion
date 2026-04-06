@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/04 16:17:29 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 18:01:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void *monitor_routine(void *arg)
 	monitor_arg_t *m_arg;
 	struct timeval t;
 	long long current_time;
-	long long last_compl_time;
+	long long burn_out_time;
 	int	stop;
 	int	i;
 
@@ -26,9 +26,9 @@ void *monitor_routine(void *arg)
 	while (stop == 0)
 	{
 		pthread_mutex_lock(m_arg->simul_lock);
-		if (*(m_arg->simul->finished_coders) == m_arg->config->number_of_coders)
+		if (m_arg->simul->finished_coders == m_arg->config->number_of_coders)
 		{
-			*(m_arg->simul->is_simul_alive) = 0;
+			m_arg->simul->is_simul_alive = 0;
 			pthread_mutex_unlock(m_arg->simul_lock);
 			printf("Finished = all\n");
 			break;
@@ -37,17 +37,17 @@ void *monitor_routine(void *arg)
 		i = 0;
 		while (i < m_arg->config->number_of_coders)
 		{
-			
+
 			current_time =  get_current_time(&t);
 			pthread_mutex_lock(m_arg->coders[i].coder_lock);
-			last_compl_time = m_arg->coders[i].last_compile_time;
+			burn_out_time = m_arg->coders[i].burn_out_time;
 			pthread_mutex_unlock(m_arg->coders[i].coder_lock);
-			if (current_time - last_compl_time > m_arg->config->time_to_burnout)
+			if (current_time > burn_out_time)
 			{
 				stop = 1;
-				log_event(m_arg->coders->print_lock, (m_arg->coders)[i].id, "borned out", current_time - m_arg->config->start);
+				log_event(m_arg->coders->print_lock, (m_arg->coders)[i].id, "burned out", current_time - m_arg->simul->start);
 				pthread_mutex_lock(m_arg->simul_lock);
-				*(m_arg->simul->is_simul_alive) = 0;
+				m_arg->simul->is_simul_alive = 0;
 				pthread_mutex_unlock(m_arg->simul_lock);
 				break;
 			}
@@ -67,13 +67,13 @@ void *coders_routine(void* arg)
 	int	stop;
 	coder = (coder_t *)arg;
 	long long		current_time;
-	
+
 
 	stop = 0;
 	while (stop == 0)
 	{
 		current_time = get_current_time(&tv);
-		log_event(coder->print_lock, coder->id, "is compiling", current_time - coder->config->start);
+		log_event(coder->print_lock, coder->id, "is compiling", current_time - coder->simul->start);
 		pthread_mutex_lock(coder->coder_lock);
 		coder->last_compile_time = current_time;
 		coder->burn_out_time = current_time + coder->config->time_to_burnout;
@@ -82,18 +82,18 @@ void *coders_routine(void* arg)
 		coder->compiles_done++;
 		if (coder->compiles_done == coder->config->number_of_compiles_required)
 		{
-			pthread_mutex_lock(coder->simul_state_lock);
-			*(coder->simul_state->finished_coders) = *(coder->simul_state->finished_coders) + 1;
-			pthread_mutex_unlock(coder->simul_state_lock);
+			pthread_mutex_lock(coder->simul_lock);
+			coder->simul->finished_coders = coder->simul->finished_coders + 1;
+			pthread_mutex_unlock(coder->simul_lock);
 		}
-		log_event(coder->print_lock, coder->id, "is debugging", get_current_time(&tv) - coder->config->start);
+		log_event(coder->print_lock, coder->id, "is debugging", get_current_time(&tv) - coder->simul->start);
 		usleep((coder->config->time_to_debug) * 1000);
-		log_event(coder->print_lock, coder->id, "is refactoring", get_current_time(&tv) - coder->config->start);
+		log_event(coder->print_lock, coder->id, "is refactoring", get_current_time(&tv) - coder->simul->start);
 		usleep((coder->config->time_to_refactor) * 1000);
-		pthread_mutex_lock(coder->simul_state_lock);
-		if (*(coder->simul_state->is_simul_alive) == 0)
+		pthread_mutex_lock(coder->simul_lock);
+		if (coder->simul->is_simul_alive == 0)
 			stop = 1;
-		pthread_mutex_unlock(coder->simul_state_lock);
+		pthread_mutex_unlock(coder->simul_lock);
 	}
 	return(NULL);
 }

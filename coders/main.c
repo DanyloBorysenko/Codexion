@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 15:47:48 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 17:47:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,6 @@ int	main(int argc, char	**argv)
 	destroy_locks(locks, config->number_of_coders);
 	free_locks(locks);
 	free(config);
-	free_simul(sim_state);
+	free(sim_state);
 	return (0);
 }

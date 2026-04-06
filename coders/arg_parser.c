@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/02 10:56:44 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/06 18:00:00 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,6 @@ int	is_sched_val_correct(char *scheduler_value, char **possible_schedul_val)
 t_config	*create_config(int *args, char *scheduler_value)
 {
 	t_config		*config;
-	struct timeval	tv;
 
 	config = malloc(sizeof(t_config));
 	if (!config)
@@ -75,7 +74,6 @@ t_config	*create_config(int *args, char *scheduler_value)
 	config->number_of_compiles_required = args[5];
 	config->dongle_cooldown = args[6];
 	config->scheduler = scheduler_value;
-	config->start = get_current_time(&tv);
 	return (config);
 }
 
