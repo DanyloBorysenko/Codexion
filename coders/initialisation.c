@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 19:16:50 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/09 13:49:01 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,24 @@ coder_t	*init_coders(t_config *config, locks_t *locks, simul_t *simul)
 		i++;
 	}
 	return (coders);
+}
+
+dongle_t	*init_dongles(int coders_count)
+{
+	dongle_t	*dongles;
+	int			i;
+
+	dongles = malloc(sizeof(dongle_t) * coders_count);
+	if (!dongles)
+		return (NULL);
+	i = 0;
+	while (i < coders_count)
+	{
+		dongles[i].is_avail = 1;
+		dongles[i].num = i + 1;
+		i++;
+	}
+	return dongles;
 }
 
 simul_t	*init_simul(void)

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 20:18:06 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/09 13:50:55 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,12 +143,14 @@ void *coders_routine(void* arg)
 void start_to_work(t_config *config, locks_t *locks, simul_t *simul_state)
 {
 	coder_t			*coders;
+	dongle_t		*dongles;
 	pthread_t		monitor;
 	monitor_arg_t	*m_arg;
 	int	i;
 
 	coders = init_coders(config, locks, simul_state);
 	m_arg = init_monitor(config, locks, simul_state, coders);
+	dongles = init_dongles(config->number_of_coders);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -163,6 +165,7 @@ void start_to_work(t_config *config, locks_t *locks, simul_t *simul_state)
 		i++;
 	}
 	pthread_join(monitor, NULL);
+	free(dongles);
 	free(coders);
 	free(m_arg);
 }

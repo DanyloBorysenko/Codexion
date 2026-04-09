@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 19:17:03 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/09 13:41:12 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,12 @@ typedef struct monitor_arg_s
 	simul_t	*simul;
 }				monitor_arg_t;
 
+typedef struct dongle_s
+{
+	int	num;
+	int	is_avail;
+}				dongle_t;
+
 
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
@@ -85,5 +91,6 @@ monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
 	simul_t *simul_state,
 	coder_t *coders);
 coder_t			*init_coders(t_config *config, locks_t *locks, simul_t *simul);
+dongle_t	*init_dongles(int coders_count);
 
 #endif
