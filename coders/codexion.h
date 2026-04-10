@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/09 13:41:12 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/10 19:59:23 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ typedef struct s_config
 
 typedef struct locks_s
 {
-	pthread_mutex_t	*coder_state_locks;
 	pthread_mutex_t	*simul_state_lock;
 	pthread_mutex_t	*print_lock;
 }				locks_t;
@@ -47,19 +46,27 @@ typedef struct simul_s
 	long long start;
 }				simul_t;
 
+typedef struct dongle_s
+{
+	int				num;
+	int				is_avail;
+	pthread_mutex_t	lock;
+}				dongle_t;
 
 typedef struct coder_s
 {
 	int				id;
 	pthread_t		thread;
 	t_config		*config;
+	dongle_t		*left_dng;
+	dongle_t		*right_dng;
 	int				compiles_done;
 	pthread_mutex_t	*print_lock;
 	pthread_mutex_t *simul_lock;
-	pthread_mutex_t	*coder_lock;
+	pthread_mutex_t	coder_lock;
 	long long		last_compile_time;
 	long long		burn_out_time;
-	simul_t	*simul;
+	simul_t			*simul;
 }				coder_t;
 
 typedef struct monitor_arg_s
@@ -70,27 +77,21 @@ typedef struct monitor_arg_s
 	simul_t	*simul;
 }				monitor_arg_t;
 
-typedef struct dongle_s
-{
-	int	num;
-	int	is_avail;
-}				dongle_t;
-
-
-
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
 void 			start_to_work(t_config *cfg, locks_t *locks, simul_t *simul);
-void			init_locks(locks_t *locks, int coders_count);
-void			destroy_locks(locks_t *locks, int coders_count);
-locks_t			*create_locks(int coders_count);
+void			init_locks(locks_t *locks);
+void			destroy_locks(locks_t *locks);
+locks_t			*create_locks(void);
 void			free_locks(locks_t *ptr);
 simul_t	*init_simul(void);
 void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
 	simul_t *simul_state,
 	coder_t *coders);
-coder_t			*init_coders(t_config *config, locks_t *locks, simul_t *simul);
-dongle_t	*init_dongles(int coders_count);
+coder_t			*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls);
+void			destroy_coders(coder_t *coders, int count);
+dongle_t		*init_dongles(int coders_count);
+void 			destroy_dongles(dongle_t *dongles, int coders_count);
 
 #endif

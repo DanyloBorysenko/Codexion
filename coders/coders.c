@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/09 13:50:55 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/10 20:01:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,10 @@ void *monitor_routine(void *arg)
 		{
 
 			current_time =  get_current_time(&t);
-			pthread_mutex_lock(m_arg->coders[i].coder_lock);
+			pthread_mutex_lock(&m_arg->coders[i].coder_lock);
 			burn_out_time = m_arg->coders[i].burn_out_time;
 			// printf("cur time %llu, burn out time %llu\n", current_time, burn_out_time);
-			pthread_mutex_unlock(m_arg->coders[i].coder_lock);
+			pthread_mutex_unlock(&m_arg->coders[i].coder_lock);
 			if (current_time > burn_out_time)
 			{
 				stop = 1;
@@ -74,10 +74,10 @@ int compile(coder_t *coder)
 		return (0);
 	current_time = get_current_time(&tv);
 	log_event(coder->print_lock, coder->id, "is compiling", current_time - coder->simul->start);
-	pthread_mutex_lock(coder->coder_lock);
+	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
 	coder->burn_out_time = current_time + coder->config->time_to_burnout;
-	pthread_mutex_unlock(coder->coder_lock);
+	pthread_mutex_unlock(&coder->coder_lock);
 	usleep((coder->config->time_to_compile) * 1000);
 	coder->compiles_done++;
 	if (coder->compiles_done == coder->config->number_of_compiles_required)
@@ -148,9 +148,9 @@ void start_to_work(t_config *config, locks_t *locks, simul_t *simul_state)
 	monitor_arg_t	*m_arg;
 	int	i;
 
-	coders = init_coders(config, locks, simul_state);
-	m_arg = init_monitor(config, locks, simul_state, coders);
 	dongles = init_dongles(config->number_of_coders);
+	coders = init_coders(config, locks, simul_state, dongles);
+	m_arg = init_monitor(config, locks, simul_state, coders);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -165,7 +165,7 @@ void start_to_work(t_config *config, locks_t *locks, simul_t *simul_state)
 		i++;
 	}
 	pthread_join(monitor, NULL);
-	free(dongles);
-	free(coders);
+	destroy_dongles(dongles, config->number_of_coders);
+	destroy_coders(coders, config->number_of_coders);
 	free(m_arg);
 }

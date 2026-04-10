@@ -9,7 +9,8 @@ MY_SRC = arg_parser.c    \
 		 coders.c        \
 		 locks.c         \
 		 logger.c        \
-		 initialisation.c
+		 initialisation.c \
+		 dongles.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

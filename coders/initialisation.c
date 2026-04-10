@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/09 13:49:01 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/10 19:59:39 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,53 +30,52 @@ monitor_arg_t	*init_monitor(
 	return (m_arg);
 }
 
-coder_t	*init_coders(t_config *config, locks_t *locks, simul_t *simul)
+coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls)
 {
 	coder_t		*coders;
 	int			i;
 
-	coders = malloc(sizeof(coder_t) * config->number_of_coders);
+	coders = malloc(sizeof(coder_t) * conf->number_of_coders);
 	if (!coders)
 		return (NULL);
 	i = 0;
-	while (i < config->number_of_coders)
+	while (i < conf->number_of_coders)
 	{
 		coders[i].id = i + 1;
-		coders[i].config = config;
+		coders[i].config = conf;
+		coders[i].left_dng = &dngls[i];
+		coders[i].right_dng = &dngls[((i + 1) % conf->number_of_coders)];
 		coders[i].compiles_done = 0;
-		coders[i].last_compile_time = simul->start;
-		coders[i].burn_out_time = simul->start + config->time_to_burnout;
+		coders[i].last_compile_time = sim->start;
+		coders[i].burn_out_time = sim->start + conf->time_to_burnout;
 		coders[i].print_lock = locks->print_lock;
 		coders[i].simul_lock = locks->simul_state_lock;
-		coders[i].coder_lock = &(locks->coder_state_locks[i]);
-		coders[i].simul = simul;
+		coders[i].simul = sim;
+		pthread_mutex_init(&coders[i].coder_lock, NULL);
 		i++;
 	}
 	return (coders);
 }
 
-dongle_t	*init_dongles(int coders_count)
+void	destroy_coders(coder_t *coders, int count)
 {
-	dongle_t	*dongles;
-	int			i;
+	int	i;
 
-	dongles = malloc(sizeof(dongle_t) * coders_count);
-	if (!dongles)
-		return (NULL);
+	if (!coders)
+		return ;
 	i = 0;
-	while (i < coders_count)
+	while (i < count)
 	{
-		dongles[i].is_avail = 1;
-		dongles[i].num = i + 1;
+		pthread_mutex_destroy(&coders[i].coder_lock);
 		i++;
 	}
-	return dongles;
+	free(coders);
 }
 
 simul_t	*init_simul(void)
 {
-	simul_t	*ptr;
-	struct timeval tv;
+	simul_t			*ptr;
+	struct timeval	tv;
 
 	ptr = malloc(sizeof(simul_t));
 	if (!ptr)
