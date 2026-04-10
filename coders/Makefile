@@ -6,7 +6,7 @@ HEADER = codexion.h
 MY_SRC = arg_parser.c    \
          main.c          \
 		 time_counter.c  \
-		 coders.c        \
+		 work.c        \
 		 locks.c         \
 		 logger.c        \
 		 initialisation.c \

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/10 19:59:23 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/10 21:32:48 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,8 @@ typedef struct s_config
 
 typedef struct locks_s
 {
-	pthread_mutex_t	*simul_state_lock;
-	pthread_mutex_t	*print_lock;
+	pthread_mutex_t	simul_state_lock;
+	pthread_mutex_t	print_lock;
 }				locks_t;
 
 typedef struct simul_s
@@ -80,10 +80,8 @@ typedef struct monitor_arg_s
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
 void 			start_to_work(t_config *cfg, locks_t *locks, simul_t *simul);
-void			init_locks(locks_t *locks);
 void			destroy_locks(locks_t *locks);
 locks_t			*create_locks(void);
-void			free_locks(locks_t *ptr);
 simul_t	*init_simul(void);
 void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,

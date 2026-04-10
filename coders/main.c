@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/10 19:50:37 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/10 21:21:04 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ int	main(int argc, char	**argv)
 	sim_state = init_simul();
 	start_to_work(config, locks, sim_state);
 	destroy_locks(locks);
-	free_locks(locks);
 	free(config);
 	free(sim_state);
 	return (0);
