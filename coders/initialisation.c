@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/10 21:34:59 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/11 10:56:33 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,7 @@ coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dng
 		coders[i].compiles_done = 0;
 		coders[i].last_compile_time = sim->start;
 		coders[i].burn_out_time = sim->start + conf->time_to_burnout;
-		coders[i].print_lock = &locks->print_lock;
-		coders[i].simul_lock = &locks->simul_state_lock;
+		coders[i].locks = locks;
 		coders[i].simul = sim;
 		pthread_mutex_init(&coders[i].coder_lock, NULL);
 		i++;

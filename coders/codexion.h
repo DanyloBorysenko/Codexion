@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/10 21:32:48 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/11 11:23:47 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,13 +56,12 @@ typedef struct dongle_s
 typedef struct coder_s
 {
 	int				id;
-	pthread_t		thread;
+	pthread_t		thread_id;
 	t_config		*config;
 	dongle_t		*left_dng;
 	dongle_t		*right_dng;
 	int				compiles_done;
-	pthread_mutex_t	*print_lock;
-	pthread_mutex_t *simul_lock;
+	locks_t			*locks;
 	pthread_mutex_t	coder_lock;
 	long long		last_compile_time;
 	long long		burn_out_time;
@@ -79,7 +78,7 @@ typedef struct monitor_arg_s
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
-void 			start_to_work(t_config *cfg, locks_t *locks, simul_t *simul);
+void 			start_to_work(t_config *cfg, simul_t *simul);
 void			destroy_locks(locks_t *locks);
 locks_t			*create_locks(void);
 simul_t	*init_simul(void);
