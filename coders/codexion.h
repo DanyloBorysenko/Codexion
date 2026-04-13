@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/11 11:23:47 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/13 18:01:09 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,24 @@ typedef struct dongle_s
 	pthread_mutex_t	lock;
 }				dongle_t;
 
+typedef struct coder_s coder_t;
+
+typedef struct req_s
+{
+	coder_t		*coder;
+	long long 	arr_time;
+	long long 	deadline;
+}				req_t;
+
+typedef struct heap_s
+{
+	req_t			*reqs;
+	int				size;
+	int				capacity;
+	char    		*scheduler;
+	pthread_mutex_t	lock;
+}				heap_t;
+
 typedef struct coder_s
 {
 	int				id;
@@ -66,6 +84,7 @@ typedef struct coder_s
 	long long		last_compile_time;
 	long long		burn_out_time;
 	simul_t			*simul;
+	heap_t			*heap;
 }				coder_t;
 
 typedef struct monitor_arg_s
@@ -86,9 +105,12 @@ void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
 	simul_t *simul_state,
 	coder_t *coders);
-coder_t			*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls);
+coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(int coders_count);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
+heap_t			*init_heap(t_config *config);
+void			heap_insert(heap_t *heap, req_t req);
+void 			destroy_heap(heap_t *heap);
 
 #endif

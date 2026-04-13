@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/11 10:56:33 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/13 16:24:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ monitor_arg_t	*init_monitor(
 	return (m_arg);
 }
 
-coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls)
+coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap)
 {
 	coder_t		*coders;
 	int			i;
@@ -50,6 +50,7 @@ coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dng
 		coders[i].burn_out_time = sim->start + conf->time_to_burnout;
 		coders[i].locks = locks;
 		coders[i].simul = sim;
+		coders[i].heap = heap;
 		pthread_mutex_init(&coders[i].coder_lock, NULL);
 		i++;
 	}

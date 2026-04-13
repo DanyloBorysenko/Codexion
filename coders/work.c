@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/11 11:36:52 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/13 18:03:16 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,13 +122,47 @@ int refact(coder_t *coder)
 	return (1);
 }
 
+// void print_req(req_t *req)
+// {
+// 	if (req == NULL)
+// 		printf("NULL");
+// 	else
+// 		printf("'coder_id=%d, arr_time=%llu, deadline=%llu'", req->coder->id, req->arr_time, req->deadline);
+// }
+
+// void print_heap(heap_t *heap)
+// {
+// 	int	i;
+	
+// 	i = 0;
+// 	while (i < heap->size)
+// 	{
+// 		print_req(&(heap->reqs)[i]);
+// 		i++;
+// 	}
+// 	printf("\n");
+// }
+
 void *coders_routine(void* arg)
 {
 	coder_t 		*coder;
 	coder = (coder_t *)arg;
-
+	req_t	request;
+	struct timeval	tv;
+	long long		now;
 	while (1)
 	{
+		now = get_current_time(&tv);
+		request.coder = coder;
+		request.arr_time = now;
+		request.deadline = now + coder->config->time_to_burnout;
+		pthread_mutex_lock(&coder->locks->print_lock);
+		printf("Request Created: coder id %d, arr time %llu, deadline %llu\n", coder->id, request.arr_time, request.deadline);
+		pthread_mutex_unlock(&coder->locks->print_lock);
+		pthread_mutex_lock(&coder->heap->lock);
+		heap_insert(coder->heap, request);
+		pthread_mutex_unlock(&coder->heap->lock);
+		// print_heap(coder->heap);
 		if (!compile(coder))
             break;
         if (!debug(coder))
@@ -141,16 +175,20 @@ void *coders_routine(void* arg)
 
 void start_to_work(t_config *config, simul_t *simul_state)
 {
+	heap_t			*heap;
 	coder_t			*coders;
 	dongle_t		*dongles;
 	pthread_t		monitor;
 	monitor_arg_t	*m_arg;
 	locks_t			*locks;
 	int	i;
-
+	
+	heap = init_heap(config);
+	if (!heap)
+		return ;
 	locks = create_locks();
 	dongles = init_dongles(config->number_of_coders);
-	coders = init_coders(config, locks, simul_state, dongles);
+	coders = init_coders(config, locks, simul_state, dongles, heap);
 	m_arg = init_monitor(config, locks, simul_state, coders);
 	i = 0;
 	while (i < config->number_of_coders)
@@ -170,4 +208,5 @@ void start_to_work(t_config *config, simul_t *simul_state)
 	destroy_dongles(dongles, config->number_of_coders);
 	destroy_locks(locks);
 	free(m_arg);
+	destroy_heap(heap);
 }
