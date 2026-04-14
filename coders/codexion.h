@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/13 18:01:09 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/14 13:42:01 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ typedef struct locks_s
 {
 	pthread_mutex_t	simul_state_lock;
 	pthread_mutex_t	print_lock;
+	pthread_cond_t	sched_cond;
 }				locks_t;
 
 typedef struct simul_s
@@ -81,8 +82,8 @@ typedef struct coder_s
 	int				compiles_done;
 	locks_t			*locks;
 	pthread_mutex_t	coder_lock;
+	int				allowed;
 	long long		last_compile_time;
-	long long		burn_out_time;
 	simul_t			*simul;
 	heap_t			*heap;
 }				coder_t;
@@ -91,7 +92,7 @@ typedef struct monitor_arg_s
 {
 	t_config		*config;
 	coder_t			*coders;
-	pthread_mutex_t *simul_lock;
+	locks_t			*locks;
 	simul_t	*simul;
 }				monitor_arg_t;
 

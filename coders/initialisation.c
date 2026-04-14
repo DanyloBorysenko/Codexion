@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/13 16:24:03 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/14 13:42:08 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ monitor_arg_t	*init_monitor(
 	m_arg->config = config;
 	m_arg->coders = coders;
 	m_arg->simul = simul_state;
-	m_arg->simul_lock = &locks->simul_state_lock;
+	m_arg->locks = locks;
 	return (m_arg);
 }
 
@@ -43,11 +43,11 @@ coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dng
 	{
 		coders[i].id = i + 1;
 		coders[i].config = conf;
+		coders[i].allowed = 0;
 		coders[i].left_dng = &dngls[i];
 		coders[i].right_dng = &dngls[((i + 1) % conf->number_of_coders)];
 		coders[i].compiles_done = 0;
 		coders[i].last_compile_time = sim->start;
-		coders[i].burn_out_time = sim->start + conf->time_to_burnout;
 		coders[i].locks = locks;
 		coders[i].simul = sim;
 		coders[i].heap = heap;
