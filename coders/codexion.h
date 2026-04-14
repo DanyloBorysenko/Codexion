@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 17:03:13 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/15 00:51:30 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ typedef struct locks_s
 {
 	pthread_mutex_t	simul_state_lock;
 	pthread_mutex_t	print_lock;
-	pthread_cond_t	sched_cond;
+	pthread_cond_t	shared_cond;
 }				locks_t;
 
 typedef struct simul_s
@@ -50,7 +50,6 @@ typedef struct simul_s
 typedef struct dongle_s
 {
 	int				num;
-	int				is_avail;
 	pthread_mutex_t	lock;
 }				dongle_t;
 
@@ -96,22 +95,19 @@ typedef struct monitor_arg_s
 	simul_t	*simul;
 }				monitor_arg_t;
 
-typedef struct init_arg_s
+typedef struct shared_arg_s
 {
 	t_config	*conf;
 	locks_t		*locks;
 	simul_t		*sim;
 	dongle_t	*dngls;
 	heap_t		*heap;
-}	init_arg_t;
+}				shared_arg_t;
 
 typedef struct sched_arg_s
 {
-	heap_t		*heap;
-	coder_t		*coders;
-	locks_t		*locks;
-	simul_t		*simul;
-	t_config	*config;
+	shared_arg_t	shared_arg;
+	coder_t			*coders;
 }				sched_arg_t;
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
@@ -124,7 +120,7 @@ void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
 	simul_t *simul_state,
 	coder_t *coders);
-coder_t			*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap);
+coder_t			*init_coders(shared_arg_t init_arg);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(int coders_count);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);

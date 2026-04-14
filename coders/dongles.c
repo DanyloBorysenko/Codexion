@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/10 19:33:24 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/15 00:12:39 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ dongle_t	*init_dongles(int coders_count)
 	i = 0;
 	while (i < coders_count)
 	{
-		dongles[i].is_avail = 1;
 		dongles[i].num = i + 1;
 		pthread_mutex_init(&dongles[i].lock, NULL);
 		i++;

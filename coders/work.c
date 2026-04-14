@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 17:11:30 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/15 00:52:47 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ void *monitor_routine(void *arg)
 		if (m_arg->simul->finished_coders == m_arg->config->number_of_coders)
 		{
 			m_arg->simul->is_simul_alive = 0;
-			pthread_cond_broadcast(&m_arg->locks->sched_cond);
+			pthread_cond_broadcast(&m_arg->locks->shared_cond);
 			pthread_mutex_unlock(&m_arg->locks->simul_state_lock);
 			printf("Finished = all\n");
 			break;
@@ -49,7 +49,7 @@ void *monitor_routine(void *arg)
 				log_event(&m_arg->locks->print_lock, (m_arg->coders)[i].id, "burned out", current_time - m_arg->simul->start);
 				pthread_mutex_lock(&m_arg->locks->simul_state_lock);
 				m_arg->simul->is_simul_alive = 0;
-				pthread_cond_broadcast(&m_arg->locks->sched_cond);
+				pthread_cond_broadcast(&m_arg->locks->shared_cond);
 				pthread_mutex_unlock(&m_arg->locks->simul_state_lock);
 				break;
 			}
@@ -66,7 +66,6 @@ void compile(coder_t *coder)
 {
 	struct timeval tv;
 	long long current_time;
-	int is_simul_alive;
 
 	current_time = get_current_time(&tv);
 	log_event(&coder->locks->print_lock, coder->id, "is compiling", current_time - coder->simul->start);
@@ -87,7 +86,6 @@ void debug(coder_t *coder)
 {
 	struct timeval tv;
 	long long time;
-	int is_simul_alive;
 
 	time = get_current_time(&tv) - coder->simul->start;
 	log_event(&coder->locks->print_lock, coder->id, "is debugging", time);
@@ -98,7 +96,6 @@ void refact(coder_t *coder)
 {
 	struct timeval tv;
 	long long time;
-	int is_simul_alive;
 
 	time = get_current_time(&tv) - coder->simul->start;
 	log_event(&coder->locks->print_lock, coder->id, "is refactoring", time);
@@ -126,10 +123,10 @@ void refact(coder_t *coder)
 // 	printf("\n");
 // }
 
-int	is_sim_alive(coder_t *coder)
+int is_sim_alive(coder_t *coder)
 {
-	int	alive;
-	
+	int alive;
+
 	pthread_mutex_lock(&coder->locks->simul_state_lock);
 	alive = coder->simul->is_simul_alive;
 	pthread_mutex_unlock(&coder->locks->simul_state_lock);
@@ -155,7 +152,7 @@ void *coders_routine(void *arg)
 		heap_insert(coder->heap, request);
 		pthread_mutex_lock(&coder->locks->simul_state_lock);
 		while (coder->allowed == 0 && coder->simul->is_simul_alive)
-			pthread_cond_wait(&coder->locks->sched_cond, &coder->locks->simul_state_lock);
+			pthread_cond_wait(&coder->locks->shared_cond, &coder->locks->simul_state_lock);
 		if (!coder->simul->is_simul_alive)
 		{
 			pthread_mutex_unlock(&coder->locks->simul_state_lock);
@@ -176,22 +173,47 @@ void *coders_routine(void *arg)
 	return (NULL);
 }
 
-void	*sched_routine(void *arg)
+void *sched_routine(void *arg)
 {
-	
+	sched_arg_t *sched_arg;
+	int i;
+
+	sched_arg = (sched_arg_t *)arg;
+	while (1)
+	{
+		pthread_mutex_lock(&sched_arg->shared_arg.locks->simul_state_lock);
+		if (!sched_arg->shared_arg.sim->is_simul_alive)
+		{
+			break;
+			pthread_mutex_unlock(&sched_arg->shared_arg.locks->simul_state_lock);
+		}
+		pthread_mutex_unlock(&sched_arg->shared_arg.locks->simul_state_lock);
+		sleep(1);
+		i = 0;
+		pthread_mutex_lock(&sched_arg->shared_arg.heap->lock);
+		while (i < sched_arg->shared_arg.heap->size)
+		{
+			pthread_mutex_lock(&sched_arg->shared_arg.locks->simul_state_lock);
+			sched_arg->coders[i].allowed = 1;
+			pthread_mutex_unlock(&sched_arg->shared_arg.locks->simul_state_lock);
+			i++;
+		}
+		pthread_mutex_unlock(&sched_arg->shared_arg.heap->lock);
+	}
+	return (NULL);
 }
 
 void start_to_work(t_config *config, simul_t *simul)
 {
-	heap_t 			*heap;
-	coder_t 		*coders;
-	dongle_t 		*dongles;
-	pthread_t 		monitor;
-	pthread_t 		schedlr;
-	init_arg_t		init_arg;
-	monitor_arg_t	*m_arg;
-	sched_arg_t		*sched_arg;
-	locks_t 		*locks;
+	heap_t *heap;
+	coder_t *coders;
+	dongle_t *dongles;
+	pthread_t monitor;
+	pthread_t schedlr;
+	shared_arg_t shared_arg;
+	monitor_arg_t *m_arg;
+	locks_t *locks;
+	sched_arg_t	sched_arg;
 	int i;
 
 	heap = init_heap(config);
@@ -199,13 +221,15 @@ void start_to_work(t_config *config, simul_t *simul)
 		return;
 	locks = init_locks();
 	dongles = init_dongles(config->number_of_coders);
-	init_arg.conf = config;
-	init_arg.dngls = dongles;
-	init_arg.heap = heap;
-	init_arg.locks = locks;
-	init_arg.sim = simul;
-	coders = init_coders(config, locks, simul, dongles, heap);
+	shared_arg.conf = config;
+	shared_arg.dngls = dongles;
+	shared_arg.heap = heap;
+	shared_arg.locks = locks;
+	shared_arg.sim = simul;
+	coders = init_coders(shared_arg);
 	m_arg = init_monitor(config, locks, simul, coders);
+	sched_arg.shared_arg = shared_arg;
+	sched_arg.coders = coders;
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -213,7 +237,7 @@ void start_to_work(t_config *config, simul_t *simul)
 		i++;
 	}
 	pthread_create(&monitor, NULL, monitor_routine, m_arg);
-	pthread_create(&schedlr, NULL, sched_routine, &init_arg);
+	pthread_create(&schedlr, NULL, sched_routine, &sched_arg);
 	pthread_join(monitor, NULL);
 	pthread_join(schedlr, NULL);
 	i = 0;

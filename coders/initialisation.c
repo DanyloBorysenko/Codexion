@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 13:42:08 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/15 00:25:11 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,27 +30,27 @@ monitor_arg_t	*init_monitor(
 	return (m_arg);
 }
 
-coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap)
+coder_t	*init_coders(shared_arg_t init_arg)
 {
 	coder_t		*coders;
 	int			i;
 
-	coders = malloc(sizeof(coder_t) * conf->number_of_coders);
+	coders = malloc(sizeof(coder_t) * init_arg.conf->number_of_coders);
 	if (!coders)
 		return (NULL);
 	i = 0;
-	while (i < conf->number_of_coders)
+	while (i < init_arg.conf->number_of_coders)
 	{
 		coders[i].id = i + 1;
-		coders[i].config = conf;
+		coders[i].config = init_arg.conf;
 		coders[i].allowed = 0;
-		coders[i].left_dng = &dngls[i];
-		coders[i].right_dng = &dngls[((i + 1) % conf->number_of_coders)];
+		coders[i].left_dng = &init_arg.dngls[i];
+		coders[i].right_dng = &init_arg.dngls[((i + 1) % init_arg.conf->number_of_coders)];
 		coders[i].compiles_done = 0;
-		coders[i].last_compile_time = sim->start;
-		coders[i].locks = locks;
-		coders[i].simul = sim;
-		coders[i].heap = heap;
+		coders[i].last_compile_time = init_arg.sim->start;
+		coders[i].locks = init_arg.locks;
+		coders[i].simul = init_arg.sim;
+		coders[i].heap = init_arg.heap;
 		pthread_mutex_init(&coders[i].coder_lock, NULL);
 		i++;
 	}
