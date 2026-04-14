@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 13:48:04 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/14 17:11:30 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,23 +176,36 @@ void *coders_routine(void *arg)
 	return (NULL);
 }
 
-void start_to_work(t_config *config, simul_t *simul_state)
+void	*sched_routine(void *arg)
 {
-	heap_t *heap;
-	coder_t *coders;
-	dongle_t *dongles;
-	pthread_t monitor;
-	monitor_arg_t *m_arg;
-	locks_t *locks;
+	
+}
+
+void start_to_work(t_config *config, simul_t *simul)
+{
+	heap_t 			*heap;
+	coder_t 		*coders;
+	dongle_t 		*dongles;
+	pthread_t 		monitor;
+	pthread_t 		schedlr;
+	init_arg_t		init_arg;
+	monitor_arg_t	*m_arg;
+	sched_arg_t		*sched_arg;
+	locks_t 		*locks;
 	int i;
 
 	heap = init_heap(config);
 	if (!heap)
 		return;
-	locks = create_locks();
+	locks = init_locks();
 	dongles = init_dongles(config->number_of_coders);
-	coders = init_coders(config, locks, simul_state, dongles, heap);
-	m_arg = init_monitor(config, locks, simul_state, coders);
+	init_arg.conf = config;
+	init_arg.dngls = dongles;
+	init_arg.heap = heap;
+	init_arg.locks = locks;
+	init_arg.sim = simul;
+	coders = init_coders(config, locks, simul, dongles, heap);
+	m_arg = init_monitor(config, locks, simul, coders);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -200,7 +213,9 @@ void start_to_work(t_config *config, simul_t *simul_state)
 		i++;
 	}
 	pthread_create(&monitor, NULL, monitor_routine, m_arg);
+	pthread_create(&schedlr, NULL, sched_routine, &init_arg);
 	pthread_join(monitor, NULL);
+	pthread_join(schedlr, NULL);
 	i = 0;
 	while (i < config->number_of_coders)
 	{

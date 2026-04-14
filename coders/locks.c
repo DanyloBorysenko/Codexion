@@ -8,7 +8,7 @@ void destroy_locks(locks_t *locks)
 	free(locks);
 }
 
-locks_t	*create_locks(void)
+locks_t	*init_locks(void)
 {
 	locks_t *locks;
 

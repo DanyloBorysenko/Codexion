@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 13:42:01 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/14 17:03:13 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,17 +96,35 @@ typedef struct monitor_arg_s
 	simul_t	*simul;
 }				monitor_arg_t;
 
+typedef struct init_arg_s
+{
+	t_config	*conf;
+	locks_t		*locks;
+	simul_t		*sim;
+	dongle_t	*dngls;
+	heap_t		*heap;
+}	init_arg_t;
+
+typedef struct sched_arg_s
+{
+	heap_t		*heap;
+	coder_t		*coders;
+	locks_t		*locks;
+	simul_t		*simul;
+	t_config	*config;
+}				sched_arg_t;
+
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
 long long		get_current_time(struct timeval* tv);
 void 			start_to_work(t_config *cfg, simul_t *simul);
 void			destroy_locks(locks_t *locks);
-locks_t			*create_locks(void);
-simul_t	*init_simul(void);
+locks_t			*init_locks(void);
+simul_t			*init_simul(void);
 void			log_event(pthread_mutex_t *mut, int id, char *msg, int time);
 monitor_arg_t	*init_monitor(t_config *config,locks_t *locks,
 	simul_t *simul_state,
 	coder_t *coders);
-coder_t	*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap);
+coder_t			*init_coders(t_config *conf, locks_t *locks, simul_t *sim, dongle_t *dngls, heap_t *heap);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(int coders_count);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
