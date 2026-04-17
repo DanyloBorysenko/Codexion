@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 13:46:30 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/18 00:17:37 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ typedef struct s_config
 typedef struct simul_s
 {
 	int	finished_coders;
-	int	is_simul_alive;
 	long long start;
 	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	print_lock;
@@ -110,7 +109,6 @@ typedef struct shared_arg_s
 }				shared_arg_t;
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
-long long		get_current_time(struct timeval* tv);
 void 			start_to_work(t_config *cfg, simul_t *simul);
 simul_t			*init_simul(void);
 void			destroy_simul(simul_t *sim);
@@ -127,5 +125,7 @@ void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(t_config *config);
 void			heap_insert(heap_t *heap, req_t req);
 void 			destroy_heap(heap_t *heap);
+long long 		get_current_time(void);
+struct 			timespec get_abs_time(long long wake_up_time);
 
 #endif

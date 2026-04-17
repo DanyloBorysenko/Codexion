@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 17:08:33 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/18 00:53:08 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,7 @@ void wake_up_all(int count, coder_t	*coders, scheduler_t *sched)
 void *monitor_routine(void *arg)
 {
 	monitor_t *mon;
-	struct timeval t;
-	long long current_time;
+	long long now;
 	long long last;
 	int stop;
 	int i;
@@ -47,7 +46,6 @@ void *monitor_routine(void *arg)
 		pthread_mutex_lock(&mon->simul->sim_lock);
 		if (mon->simul->finished_coders == mon->config->number_of_coders)
 		{
-			mon->simul->is_simul_alive = 0;
 			pthread_mutex_unlock(&mon->simul->sim_lock);
 			wake_up_all(mon->config->number_of_coders, mon->coders, mon->sched);
 			printf("Finished = all\n");
@@ -58,18 +56,14 @@ void *monitor_routine(void *arg)
 		while (i < mon->config->number_of_coders)
 		{
 
-			gettimeofday(&t, NULL);
-			current_time = (long long)(t.tv_sec * 1000) + (t.tv_usec / 1000);
+			now = get_current_time();
 			pthread_mutex_lock(&mon->coders[i].coder_lock);
 			last = mon->coders[i].last_compile_time;
 			pthread_mutex_unlock(&mon->coders[i].coder_lock);
-			if (current_time - last > mon->config->time_to_burnout)
+			if (now - last > mon->config->time_to_burnout)
 			{
 				stop = 1;
-				log_event(mon->simul, (mon->coders)[i].id, "burned out", current_time - mon->simul->start);
-				pthread_mutex_lock(&mon->simul->sim_lock);
-				mon->simul->is_simul_alive = 0;
-				pthread_mutex_unlock(&mon->simul->sim_lock);
+				log_event(mon->simul, (mon->coders)[i].id, "burned out", now - mon->simul->start);
 				wake_up_all(mon->config->number_of_coders, mon->coders, mon->sched);
 				break;
 			}
@@ -84,25 +78,21 @@ void *monitor_routine(void *arg)
 
 void compile(coder_t *coder)
 {
-	struct timeval tv;
 	struct timespec ts;
 	long long current_time;
 	long long wake_up_time;
 
-	gettimeofday(&tv, NULL);
-	current_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	current_time = get_current_time();
 	wake_up_time = current_time + coder->config->time_to_compile;
-	ts.tv_sec = wake_up_time / 1000;
-	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
+	ts = get_abs_time(wake_up_time);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
 	while (coder->alive)
 	{
-		gettimeofday(&tv, NULL);
-		current_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		current_time = get_current_time();
 		if (current_time >= wake_up_time)
-			break;	
+			break;
 		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
 	}
 	if (!coder->alive)
@@ -120,64 +110,31 @@ void compile(coder_t *coder)
 	}
 }
 
-void debug(coder_t *coder)
+int	work(coder_t *coder, char *msg, long long work_dur)
 {
-	struct timeval tv;
 	struct timespec ts;
 	long long curr_time;
 	long long wake_up_time;
 
-	gettimeofday(&tv, NULL);
-	curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-	wake_up_time = curr_time + coder->config->time_to_debug;
-	ts.tv_sec = wake_up_time / 1000;
-	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
-	log_event(coder->simul, coder->id, "is debugging", curr_time);
+	curr_time = get_current_time();
+	wake_up_time = curr_time + work_dur;
+	ts = get_abs_time(wake_up_time);
+	log_event(coder->simul, coder->id, msg, curr_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	while (coder->alive)
 	{
-		gettimeofday(&tv, NULL);
-		curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		curr_time = get_current_time();
 		if (curr_time >= wake_up_time)
-			break;	
+			break;
 		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
 	}
 	if (!coder->alive)
 	{
 		pthread_mutex_unlock(&coder->coder_lock);
-		return;
+		return (0);
 	}
 	pthread_mutex_unlock(&coder->coder_lock);
-}
-
-void refact(coder_t *coder)
-{
-	struct timeval tv;
-	struct timespec ts;
-	long long curr_time;
-	long long wake_up_time;
-
-	gettimeofday(&tv, NULL);
-	curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-	wake_up_time = curr_time + coder->config->time_to_refactor;
-	ts.tv_sec = wake_up_time / 1000;
-	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
-	log_event(coder->simul, coder->id, "is refactoring", curr_time);
-	pthread_mutex_lock(&coder->coder_lock);
-	while (coder->alive)
-	{
-		gettimeofday(&tv, NULL);
-		curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-		if (curr_time >= wake_up_time)
-			break;	
-		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
-	}
-	if (!coder->alive)
-	{
-		pthread_mutex_unlock(&coder->coder_lock);
-		return;
-	}
-	pthread_mutex_unlock(&coder->coder_lock);
+	return (1);
 }
 
 // void print_req(req_t *req)
@@ -216,12 +173,10 @@ void *coders_routine(void *arg)
 	coder_t *coder;
 	coder = (coder_t *)arg;
 	req_t request;
-	struct timeval tv;
 	long long now;
 	while (1)
 	{
-		gettimeofday(&tv, NULL);
-		now = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		now = get_current_time();
 		request.coder = coder;
 		request.arr_time = now;
 		request.deadline = now + coder->config->time_to_burnout;
@@ -242,11 +197,9 @@ void *coders_routine(void *arg)
 		compile(coder);
 		if (!is_cod_alive(coder))
 			break;
-		debug(coder);
-		if (!is_cod_alive(coder))
+		if (!work(coder, "is debugging",coder->config->time_to_debug))
 			break;
-		refact(coder);
-		if (!is_cod_alive(coder))
+		if (!work(coder, "is refactoring",coder->config->time_to_debug))
 			break;
 	}
 	return (NULL);

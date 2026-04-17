@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 12:56:26 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 14:08:30 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/17 23:30:17 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ simul_t	*init_simul(void)
 	pthread_mutex_init(&ptr->sim_lock, NULL);
 	pthread_mutex_init(&ptr->print_lock, NULL);
 	ptr->finished_coders = 0;
-	ptr->is_simul_alive = 1;
 	gettimeofday(&tv, NULL);
 	time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 	ptr->start = time;
