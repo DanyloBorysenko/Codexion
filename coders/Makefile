@@ -5,13 +5,13 @@ RM = rm -f
 HEADER = codexion.h
 MY_SRC = arg_parser.c    \
          main.c          \
-		 time_counter.c  \
 		 work.c          \
-		 locks.c         \
 		 logger.c        \
 		 initialisation.c\
 		 dongles.c       \
-		 heap.c
+		 heap.c          \
+		 scheduler.c     \
+		 simulation.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

@@ -1,19 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   time_counter.c                                     :+:      :+:    :+:   */
+/*   monitor.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/28 15:26:40 by danborys          #+#    #+#             */
-/*   Updated: 2026/03/28 15:27:24 by danborys         ###   ########.fr       */
+/*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
+/*   Updated: 2026/04/17 11:15:47 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-long long	get_current_time(struct timeval *tv)
+monitor_t	*init_monitor(
+	t_config *config,
+	locks_t *locks,
+	simul_t *simul_state,
+	coder_t *coders)
 {
-	gettimeofday(tv, NULL);
-	return ((long long)(tv->tv_sec * 1000) + (tv->tv_usec / 1000));
+	monitor_t	*mon;
+
+	mon = malloc(sizeof(monitor_t));
+	if (!mon)
+		return (NULL);
+	mon->config = config;
+	mon->coders = coders;
+	mon->simul = simul_state;
+	mon->locks = locks;
+	return (mon);
 }

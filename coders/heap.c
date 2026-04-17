@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/14 09:59:56 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/17 10:18:25 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ heap_t *init_heap(t_config *config)
 	heap_t *heap;
 
 	// reqs = malloc(sizeof(req_t) * config->number_of_coders);
-	reqs = malloc(sizeof(req_t) * config->number_of_compiles_required * 2);
+	reqs = malloc(sizeof(req_t) * 100);
 	if (!reqs)
 		return (NULL);
 	heap = malloc(sizeof(heap_t));
@@ -28,7 +28,7 @@ heap_t *init_heap(t_config *config)
 		return (NULL);
 	}
 	// heap->capacity = config->number_of_coders;
-	heap->capacity = config->number_of_coders * 2;
+	heap->capacity = 100;
 	heap->scheduler = config->scheduler;
 	heap->reqs = reqs;
 	heap->size = 0;
