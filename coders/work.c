@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 14:09:45 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/17 17:08:33 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,21 +85,32 @@ void *monitor_routine(void *arg)
 void compile(coder_t *coder)
 {
 	struct timeval tv;
+	struct timespec ts;
 	long long current_time;
-	// long long wake_up_time;
+	long long wake_up_time;
 
 	gettimeofday(&tv, NULL);
 	current_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	wake_up_time = current_time + coder->config->time_to_compile;
+	ts.tv_sec = wake_up_time / 1000;
+	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
 	log_event(coder->simul, coder->id, "is compiling", current_time);
-	// wake_up_time = current_time + 
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
-	// while (coder->alive)
-	// {
-	// 	pthread_cond_timedwait(&coder->cond, &coder->coder_lock,)
-	// }
+	while (coder->alive)
+	{
+		gettimeofday(&tv, NULL);
+		current_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		if (current_time >= wake_up_time)
+			break;	
+		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
+	}
+	if (!coder->alive)
+	{
+		pthread_mutex_unlock(&coder->coder_lock);
+		return;
+	}
 	pthread_mutex_unlock(&coder->coder_lock);
-	usleep((coder->config->time_to_compile) * 1000);
 	coder->compiles_done++;
 	if (coder->compiles_done == coder->config->number_of_compiles_required)
 	{
@@ -112,23 +123,61 @@ void compile(coder_t *coder)
 void debug(coder_t *coder)
 {
 	struct timeval tv;
-	long long time;
+	struct timespec ts;
+	long long curr_time;
+	long long wake_up_time;
 
 	gettimeofday(&tv, NULL);
-	time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-	log_event(coder->simul, coder->id, "is debugging", time);
-	usleep((coder->config->time_to_debug) * 1000);
+	curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	wake_up_time = curr_time + coder->config->time_to_debug;
+	ts.tv_sec = wake_up_time / 1000;
+	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
+	log_event(coder->simul, coder->id, "is debugging", curr_time);
+	pthread_mutex_lock(&coder->coder_lock);
+	while (coder->alive)
+	{
+		gettimeofday(&tv, NULL);
+		curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		if (curr_time >= wake_up_time)
+			break;	
+		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
+	}
+	if (!coder->alive)
+	{
+		pthread_mutex_unlock(&coder->coder_lock);
+		return;
+	}
+	pthread_mutex_unlock(&coder->coder_lock);
 }
 
 void refact(coder_t *coder)
 {
 	struct timeval tv;
-	long long time;
+	struct timespec ts;
+	long long curr_time;
+	long long wake_up_time;
 
 	gettimeofday(&tv, NULL);
-	time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-	log_event(coder->simul, coder->id, "is refactoring", time);
-	usleep((coder->config->time_to_refactor) * 1000);
+	curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	wake_up_time = curr_time + coder->config->time_to_refactor;
+	ts.tv_sec = wake_up_time / 1000;
+	ts.tv_nsec = (wake_up_time % 1000) * 1000000;
+	log_event(coder->simul, coder->id, "is refactoring", curr_time);
+	pthread_mutex_lock(&coder->coder_lock);
+	while (coder->alive)
+	{
+		gettimeofday(&tv, NULL);
+		curr_time = (long long)(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+		if (curr_time >= wake_up_time)
+			break;	
+		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, &ts);
+	}
+	if (!coder->alive)
+	{
+		pthread_mutex_unlock(&coder->coder_lock);
+		return;
+	}
+	pthread_mutex_unlock(&coder->coder_lock);
 }
 
 // void print_req(req_t *req)
