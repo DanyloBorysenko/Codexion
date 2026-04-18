@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/18 17:03:16 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/18 21:53:09 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,8 @@ int compile(coder_t *coder)
 	current_time = get_current_time();
 	end_time = current_time + coder->config->time_to_compile;
 	ts = get_abs_time(end_time);
+	pthread_mutex_lock(&coder->left_dng->lock);
+	pthread_mutex_lock(&coder->right_dng->lock);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
