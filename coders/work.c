@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/19 10:51:52 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/19 16:21:08 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,10 +132,10 @@ int compile(coder_t *coder)
 	current_time = get_current_time();
 	end_time = current_time + coder->config->time_to_compile;
 	ts = get_abs_time(end_time);
-	log_event(coder->simul, coder->id, "is compiling", current_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
 	pthread_mutex_unlock(&coder->coder_lock);
+	log_event(coder->simul, coder->id, "is compiling", current_time);
 	if (!work(coder, end_time, &ts))
 		return (0);
 	coder->compiles_done++;
@@ -147,27 +147,6 @@ int compile(coder_t *coder)
 	}
 	return (1);
 }
-
-// void print_req(req_t *req)
-// {
-// 	if (req == NULL)
-// 		printf("NULL");
-// 	else
-// 		printf("'coder_id=%d, arr_time=%llu, deadline=%llu'", req->coder->id, req->arr_time, req->deadline);
-// }
-
-// void print_heap(heap_t *heap)
-// {
-// 	int i;
-
-// 	i = 0;
-// 	while (i < heap->size)
-// 	{
-// 		print_req(&(heap->reqs)[i]);
-// 		i++;
-// 	}
-// 	printf("\n");
-// }
 
 void *coders_routine(void *arg)
 {
@@ -181,9 +160,6 @@ void *coders_routine(void *arg)
 		request.coder = coder;
 		request.arr_time = now;
 		request.deadline = now + coder->config->time_to_burnout;
-		// pthread_mutex_lock(&coder->simul->print_lock);
-		// printf("Request Created: coder id %d, arr time %llu, deadline %llu\n", coder->id, request.arr_time, request.deadline);
-		// pthread_mutex_unlock(&coder->simul->print_lock);
 		heap_insert(coder->heap, request);
 		pthread_mutex_lock(&coder->sched->lock);
 		coder->sched->called = 1;
@@ -191,7 +167,13 @@ void *coders_routine(void *arg)
 		pthread_mutex_unlock(&coder->sched->lock);
 		pthread_mutex_lock(&coder->coder_lock);
 		while (coder->perm == 0 && coder->alive)
+		{
+			pthread_mutex_lock(&coder->simul->print_lock);
+			printf("coder id %d goes sleep\n", coder->id);
+			pthread_mutex_unlock(&coder->simul->print_lock);
 			pthread_cond_wait(&coder->cond, &coder->coder_lock);
+		}
+
 		if (!coder->alive)
 		{
 			pthread_mutex_unlock(&coder->coder_lock);
@@ -230,12 +212,14 @@ void *sched_routine(void *arg)
 		pthread_mutex_lock(&sched->heap->lock);
 		while (i < sched->heap->size)
 		{
+			printf("SCHED sees size=%d\n", sched->heap->size);
 			coder = sched->heap->reqs[i].coder;
+			heap_extract(sched->heap, i);
+			printf("REMOVED coder %d size=%d\n", coder->id, sched->heap->size);
 			pthread_mutex_lock(&coder->coder_lock);
 			coder->perm = 1;
 			pthread_cond_signal(&coder->cond);
 			pthread_mutex_unlock(&coder->coder_lock);
-			i++;
 		}
 		pthread_mutex_unlock(&sched->heap->lock);
 		sched->called = 0;

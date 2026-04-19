@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/19 09:58:01 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/19 14:20:09 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ typedef struct heap_s
 	req_t			*reqs;
 	int				size;
 	int				capacity;
-	char    		*scheduler;
+	char    		*sched;
 	pthread_mutex_t	lock;
 }				heap_t;
 
@@ -127,6 +127,7 @@ dongle_t		*init_dongles(int coders_count);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(t_config *config);
 void			heap_insert(heap_t *heap, req_t req);
+req_t			heap_extract(heap_t *heap, int index);
 void 			destroy_heap(heap_t *heap);
 long long 		get_current_time(void);
 struct 			timespec get_abs_time(long long wake_up_time);

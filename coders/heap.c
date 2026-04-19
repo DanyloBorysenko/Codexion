@@ -6,16 +6,16 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 10:18:25 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/19 16:01:49 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-heap_t *init_heap(t_config *config)
+heap_t	*init_heap(t_config *config)
 {
-	req_t *reqs;
-	heap_t *heap;
+	req_t	*reqs;
+	heap_t	*heap;
 
 	// reqs = malloc(sizeof(req_t) * config->number_of_coders);
 	reqs = malloc(sizeof(req_t) * 100);
@@ -29,23 +29,23 @@ heap_t *init_heap(t_config *config)
 	}
 	// heap->capacity = config->number_of_coders;
 	heap->capacity = 100;
-	heap->scheduler = config->scheduler;
+	heap->sched = config->scheduler;
 	heap->reqs = reqs;
 	heap->size = 0;
 	pthread_mutex_init(&heap->lock, NULL);
 	return (heap);
 }
 
-void destroy_heap(heap_t *heap)
+void	destroy_heap(heap_t *heap)
 {
 	if (!heap)
-		return;
+		return ;
 	pthread_mutex_destroy(&heap->lock);
 	free(heap->reqs);
 	free(heap);
 }
 
-int req_cmp(req_t parent, req_t child, char *sched)
+int	req_cmp(req_t parent, req_t child, char *sched)
 {
 	if (strcmp(sched, "fifo") == 0)
 	{
@@ -66,40 +66,79 @@ int req_cmp(req_t parent, req_t child, char *sched)
 
 static void	swap_req(req_t *a, req_t *b)
 {
-	req_t tmp;
-	
+	req_t	tmp;
+
 	tmp = *a;
 	*a = *b;
 	*b = tmp;
 }
 
-void	heapify_up(heap_t *heap, int child_ind)
+void	heapify_up(heap_t *heap, int index)
 {
-	int	parent_ind;
+	int	par_ind;
 
-	while (child_ind > 0)
+	while (index > 0)
 	{
-		parent_ind = (child_ind - 1) / 2;
-		if (req_cmp(heap->reqs[parent_ind], heap->reqs[child_ind], heap->scheduler) <= 0)
-			break;
-		swap_req(&heap->reqs[parent_ind], &heap->reqs[child_ind]);
-		child_ind = parent_ind;
+		par_ind = (index - 1) / 2;
+		if (req_cmp(heap->reqs[par_ind], heap->reqs[index], heap->sched) <= 0)
+			break ;
+		swap_req(&heap->reqs[par_ind], &heap->reqs[index]);
+		index = par_ind;
 	}
 }
 
-void heap_insert(heap_t *heap, req_t req)
+void	heapify_down(heap_t *heap, int index)
 {
-	int child_ind;
-	
+	int	left;
+	int	right;
+	int	min;
+
+	while (1)
+	{
+		min = index;
+		left = (index * 2) + 1;
+		right = (index * 2) + 2;
+		if (left < heap->size
+			&& req_cmp(heap->reqs[min], heap->reqs[left], heap->sched) > 0)
+			min = left;
+		if (right < heap->size)
+		{
+			if (req_cmp(heap->reqs[min], heap->reqs[right], heap->sched) > 0)
+				min = right;
+		}
+		if (min == index)
+			break ;
+		swap_req(&heap->reqs[index], &heap->reqs[min]);
+		index = min;
+	}
+}
+
+void	heap_insert(heap_t *heap, req_t req)
+{
+	int	child_ind;
+
 	pthread_mutex_lock(&heap->lock);
 	if (heap->size >= heap->capacity)
 	{
 		pthread_mutex_unlock(&heap->lock);
-		return ;	
+		return ;
 	}
 	child_ind = heap->size;
 	heap->reqs[child_ind] = req;
 	heap->size++;
+	printf("INSERT req, coder id %d size=%d, deadline %llu\n", req.coder->id, heap->size, req.deadline);
 	heapify_up(heap, child_ind);
 	pthread_mutex_unlock(&heap->lock);
+}
+
+req_t	heap_extract(heap_t *heap, int index)
+{
+	req_t	removed;
+
+	removed = heap->reqs[index];
+	heap->reqs[index] = heap->reqs[heap->size - 1];
+	heap->size--;
+	heapify_down(heap, index);
+	heapify_up(heap, index);
+	return (removed);
 }
