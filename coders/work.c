@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/18 21:53:09 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/19 10:51:52 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,8 +132,6 @@ int compile(coder_t *coder)
 	current_time = get_current_time();
 	end_time = current_time + coder->config->time_to_compile;
 	ts = get_abs_time(end_time);
-	pthread_mutex_lock(&coder->left_dng->lock);
-	pthread_mutex_lock(&coder->right_dng->lock);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
@@ -183,10 +181,14 @@ void *coders_routine(void *arg)
 		request.coder = coder;
 		request.arr_time = now;
 		request.deadline = now + coder->config->time_to_burnout;
-		pthread_mutex_lock(&coder->simul->print_lock);
-		printf("Request Created: coder id %d, arr time %llu, deadline %llu\n", coder->id, request.arr_time, request.deadline);
-		pthread_mutex_unlock(&coder->simul->print_lock);
+		// pthread_mutex_lock(&coder->simul->print_lock);
+		// printf("Request Created: coder id %d, arr time %llu, deadline %llu\n", coder->id, request.arr_time, request.deadline);
+		// pthread_mutex_unlock(&coder->simul->print_lock);
 		heap_insert(coder->heap, request);
+		pthread_mutex_lock(&coder->sched->lock);
+		coder->sched->called = 1;
+		pthread_cond_signal(&coder->sched->cond);
+		pthread_mutex_unlock(&coder->sched->lock);
 		pthread_mutex_lock(&coder->coder_lock);
 		while (coder->perm == 0 && coder->alive)
 			pthread_cond_wait(&coder->cond, &coder->coder_lock);
@@ -195,7 +197,7 @@ void *coders_routine(void *arg)
 			pthread_mutex_unlock(&coder->coder_lock);
 			break;
 		}
-		coder->perm = 1;
+		coder->perm = 0;
 		pthread_mutex_unlock(&coder->coder_lock);
 		if (!compile(coder))
 			break;
@@ -210,20 +212,33 @@ void *coders_routine(void *arg)
 void *sched_routine(void *arg)
 {
 	scheduler_t *sched;
+	int			i;
+	coder_t		*coder;
 
 	sched = (scheduler_t *)arg;
-	(void)sched;
 	while (1)
 	{
 		pthread_mutex_lock(&sched->lock);
-		while (sched->alive == 1)
+		while (sched->alive && sched->called == 0)
 			pthread_cond_wait(&sched->cond, &sched->lock);
 		if (!sched->alive)
 		{
-			printf("Scheduler finished\n");
 			pthread_mutex_unlock(&sched->lock);
 			break;
 		}
+		i = 0;
+		pthread_mutex_lock(&sched->heap->lock);
+		while (i < sched->heap->size)
+		{
+			coder = sched->heap->reqs[i].coder;
+			pthread_mutex_lock(&coder->coder_lock);
+			coder->perm = 1;
+			pthread_cond_signal(&coder->cond);
+			pthread_mutex_unlock(&coder->coder_lock);
+			i++;
+		}
+		pthread_mutex_unlock(&sched->heap->lock);
+		sched->called = 0;
 		pthread_mutex_unlock(&sched->lock);
 	}
 	return (NULL);
@@ -243,12 +258,13 @@ void start_to_work(t_config *config, simul_t *simul)
 	if (!heap)
 		return;
 	dongles = init_dongles(config->number_of_coders);
+	sched = init_sched(heap);
 	shared_arg.conf = config;
 	shared_arg.dngls = dongles;
 	shared_arg.heap = heap;
 	shared_arg.sim = simul;
+	shared_arg.sched = sched;
 	coders = init_coders(shared_arg);
-	sched = init_sched(heap);
 	mon = init_monitor(config, simul, coders, sched);
 	i = 0;
 	while (i < config->number_of_coders)

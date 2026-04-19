@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/18 00:17:37 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/19 09:58:01 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,16 @@ typedef struct heap_s
 	pthread_mutex_t	lock;
 }				heap_t;
 
+typedef struct scheduler_s
+{
+	pthread_t		thread_id;
+	int				alive;
+	int				called;
+	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
+	heap_t			*heap;
+} 				scheduler_t;
+
 typedef struct coder_s
 {
 	int				id;
@@ -80,16 +90,8 @@ typedef struct coder_s
 	long long		last_compile_time;
 	simul_t			*simul;
 	heap_t			*heap;
+	scheduler_t		*sched;
 }				coder_t;
-
-typedef struct scheduler_s
-{
-	pthread_t		thread_id;
-	int				alive;
-	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
-	heap_t			*heap;
-} 				scheduler_t;
 
 typedef struct monitor_s
 {
@@ -106,6 +108,7 @@ typedef struct shared_arg_s
 	simul_t		*sim;
 	dongle_t	*dngls;
 	heap_t		*heap;
+	scheduler_t	*sched;
 }				shared_arg_t;
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
