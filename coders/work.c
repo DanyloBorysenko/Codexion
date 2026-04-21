@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/19 16:21:08 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/21 15:24:30 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ void *monitor_routine(void *arg)
 			if (now - last > mon->config->time_to_burnout)
 			{
 				stop = 1;
-				log_event(mon->simul, (mon->coders)[i].id, "burned out", now - mon->simul->start);
+				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
 				wake_up_all(mon->config->number_of_coders, mon->coders, mon->sched);
 				break;
 			}
@@ -136,8 +136,20 @@ int compile(coder_t *coder)
 	coder->last_compile_time = current_time;
 	pthread_mutex_unlock(&coder->coder_lock);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
+	pthread_mutex_lock(&coder->left_dng->lock);
+	pthread_mutex_lock(&coder->right_dng->lock);
 	if (!work(coder, end_time, &ts))
+	{
+		pthread_mutex_unlock(&coder->left_dng->lock);
+		pthread_mutex_unlock(&coder->right_dng->lock);
 		return (0);
+	}
+	coder->left_dng->owner_id = 0;
+	coder->left_dng->release_time = get_current_time() + coder->config->dongle_cooldown;
+	pthread_mutex_unlock(&coder->left_dng->lock);
+	coder->right_dng->owner_id = 0;
+	coder->right_dng->release_time = get_current_time() + coder->config->dongle_cooldown;
+	pthread_mutex_unlock(&coder->right_dng->lock);
 	coder->compiles_done++;
 	if (coder->compiles_done == coder->config->number_of_compiles_required)
 	{
@@ -154,6 +166,7 @@ void *coders_routine(void *arg)
 	coder = (coder_t *)arg;
 	req_t request;
 	long long now;
+
 	while (1)
 	{
 		now = get_current_time();
@@ -173,7 +186,6 @@ void *coders_routine(void *arg)
 			pthread_mutex_unlock(&coder->simul->print_lock);
 			pthread_cond_wait(&coder->cond, &coder->coder_lock);
 		}
-
 		if (!coder->alive)
 		{
 			pthread_mutex_unlock(&coder->coder_lock);
@@ -191,11 +203,23 @@ void *coders_routine(void *arg)
 	return (NULL);
 }
 
+int	check_dongles(dongle_t *d1, dongle_t *d2)
+{
+	if (d1 == d2)
+		return (-1);
+	if (d1->owner_id == 0 && d2->owner_id == 0)
+	{
+		return (get_current_time() >= d1->release_time && get_current_time() >= d2->release_time);
+	}
+	return (0);
+}
+
 void *sched_routine(void *arg)
 {
 	scheduler_t *sched;
 	int			i;
 	coder_t		*coder;
+	int			is_dongl_ok;
 
 	sched = (scheduler_t *)arg;
 	while (1)
@@ -214,8 +238,21 @@ void *sched_routine(void *arg)
 		{
 			printf("SCHED sees size=%d\n", sched->heap->size);
 			coder = sched->heap->reqs[i].coder;
+			is_dongl_ok = check_dongles(coder->left_dng, coder->right_dng);
+			if (is_dongl_ok == -1)
+			{
+				pthread_mutex_unlock(&sched->heap->lock);
+				break;
+			}
+			if (!is_dongl_ok)
+			{
+				i++;
+				continue;
+			}
 			heap_extract(sched->heap, i);
 			printf("REMOVED coder %d size=%d\n", coder->id, sched->heap->size);
+			coder->left_dng->owner_id = coder->id;
+			coder->right_dng->owner_id = coder->id;
 			pthread_mutex_lock(&coder->coder_lock);
 			coder->perm = 1;
 			pthread_cond_signal(&coder->cond);
@@ -223,6 +260,7 @@ void *sched_routine(void *arg)
 		}
 		pthread_mutex_unlock(&sched->heap->lock);
 		sched->called = 0;
+		printf("Scheduler went sleep\n");
 		pthread_mutex_unlock(&sched->lock);
 	}
 	return (NULL);
@@ -241,7 +279,7 @@ void start_to_work(t_config *config, simul_t *simul)
 	heap = init_heap(config);
 	if (!heap)
 		return;
-	dongles = init_dongles(config->number_of_coders);
+	dongles = init_dongles(config->number_of_coders, simul->start);
 	sched = init_sched(heap);
 	shared_arg.conf = config;
 	shared_arg.dngls = dongles;

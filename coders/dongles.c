@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/15 00:12:39 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/21 12:07:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-dongle_t	*init_dongles(int coders_count)
+dongle_t	*init_dongles(int coders_count, long long start)
 {
 	dongle_t	*dongles;
 	int			i;
@@ -24,6 +24,8 @@ dongle_t	*init_dongles(int coders_count)
 	while (i < coders_count)
 	{
 		dongles[i].num = i + 1;
+		dongles[i].owner_id = 0;
+		dongles[i].release_time = start;
 		pthread_mutex_init(&dongles[i].lock, NULL);
 		i++;
 	}
