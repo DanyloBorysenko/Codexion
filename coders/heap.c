@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/19 16:01:49 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/21 21:34:19 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,7 +126,7 @@ void	heap_insert(heap_t *heap, req_t req)
 	child_ind = heap->size;
 	heap->reqs[child_ind] = req;
 	heap->size++;
-	printf("INSERT req, coder id %d size=%d, deadline %llu\n", req.coder->id, heap->size, req.deadline);
+	printf("INSERT req, coder id %d size=%d, deadline %llu, arrivaltime %llu\n", req.coder->id, heap->size, req.deadline, req.arr_time);
 	heapify_up(heap, child_ind);
 	pthread_mutex_unlock(&heap->lock);
 }

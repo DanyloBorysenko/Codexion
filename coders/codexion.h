@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/21 12:07:14 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/22 22:31:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,8 @@ coder_t			*init_coders(shared_arg_t init_arg);
 void			destroy_coders(coder_t *coders, int count);
 scheduler_t		*init_sched(heap_t	*heap);
 void			destroy_sched(scheduler_t *sched);
-dongle_t		*init_dongles(int coders_count, long long start);
+// dongle_t		*init_dongles(int coders_count);
+dongle_t		*init_dongles(int number_of_coders, long long start);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(t_config *config);
 void			heap_insert(heap_t *heap, req_t req);
