@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/23 13:13:56 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 12:43:46 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 monitor_t	*init_monitor(
 	t_config *config,
-	simul_t *simul_state,
+	simul_t *simul,
 	coder_t *coders)
 {
 	monitor_t	*mon;
@@ -24,6 +24,6 @@ monitor_t	*init_monitor(
 		return (NULL);
 	mon->config = config;
 	mon->coders = coders;
-	mon->simul = simul_state;
+	mon->simul = simul;
 	return (mon);
 }

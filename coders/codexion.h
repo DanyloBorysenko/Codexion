@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/22 22:31:29 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 12:43:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,11 @@ typedef struct dongle_s
 {
 	int				num;
 	int				owner_id;
-	long long		release_time;
+	long long		release;
 	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
+	req_t			*heap;
 }				dongle_t;
-
-typedef struct coder_s coder_t;
 
 typedef struct req_s
 {
@@ -67,16 +67,6 @@ typedef struct heap_s
 	pthread_mutex_t	lock;
 }				heap_t;
 
-typedef struct scheduler_s
-{
-	pthread_t		thread_id;
-	int				alive;
-	int				called;
-	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
-	heap_t			*heap;
-} 				scheduler_t;
-
 typedef struct coder_s
 {
 	int				id;
@@ -92,7 +82,6 @@ typedef struct coder_s
 	long long		last_compile_time;
 	simul_t			*simul;
 	heap_t			*heap;
-	scheduler_t		*sched;
 }				coder_t;
 
 typedef struct monitor_s
@@ -100,7 +89,6 @@ typedef struct monitor_s
 	pthread_t	thread_id;
 	t_config	*config;
 	coder_t		*coders;
-	scheduler_t	*sched;
 	simul_t		*simul;
 } 				monitor_t;
 
@@ -110,7 +98,6 @@ typedef struct shared_arg_s
 	simul_t		*sim;
 	dongle_t	*dngls;
 	heap_t		*heap;
-	scheduler_t	*sched;
 }				shared_arg_t;
 
 t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
@@ -119,14 +106,10 @@ simul_t			*init_simul(void);
 void			destroy_simul(simul_t *sim);
 void			log_event(simul_t	*sim, int id, char *msg, long long time);
 monitor_t		*init_monitor(t_config *config, simul_t *simul,
-	coder_t *coders,
-	scheduler_t	*sched);
+	coder_t *coders);
 coder_t			*init_coders(shared_arg_t init_arg);
 void			destroy_coders(coder_t *coders, int count);
-scheduler_t		*init_sched(heap_t	*heap);
-void			destroy_sched(scheduler_t *sched);
-// dongle_t		*init_dongles(int coders_count);
-dongle_t		*init_dongles(int number_of_coders, long long start);
+dongle_t		*init_dongles(int coders_count);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(t_config *config);
 void			heap_insert(heap_t *heap, req_t req);

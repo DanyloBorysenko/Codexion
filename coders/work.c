@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/23 14:08:49 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 12:43:16 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void wake_up_all(int count, coder_t	*coders, scheduler_t *sched)
+void wake_up_all(int count, coder_t	*coders)
 {
 	int	i;
 
@@ -25,10 +25,6 @@ void wake_up_all(int count, coder_t	*coders, scheduler_t *sched)
 		pthread_mutex_unlock(&coders[i].coder_lock);
 		i++;
 	}
-	pthread_mutex_lock(&sched->lock);
-	sched->alive = 0;
-	pthread_cond_signal(&sched->cond);
-	pthread_mutex_unlock(&sched->lock);
 }
 
 void *monitor_routine(void *arg)
@@ -47,7 +43,7 @@ void *monitor_routine(void *arg)
 		if (mon->simul->finished_coders == mon->config->number_of_coders)
 		{
 			pthread_mutex_unlock(&mon->simul->sim_lock);
-			wake_up_all(mon->config->number_of_coders, mon->coders, mon->sched);
+			wake_up_all(mon->config->number_of_coders, mon->coders);
 			printf("Finished = all\n");
 			break;
 		}
@@ -64,7 +60,7 @@ void *monitor_routine(void *arg)
 			{
 				stop = 1;
 				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
-				wake_up_all(mon->config->number_of_coders, mon->coders, mon->sched);
+				wake_up_all(mon->config->number_of_coders, mon->coders);
 				break;
 			}
 			i++;
@@ -137,11 +133,11 @@ int compile(coder_t *coder)
 	pthread_mutex_unlock(&coder->coder_lock);
 	pthread_mutex_lock(&coder->left_dng->lock);
 	log_event(coder->simul, coder->id, "has taken a dongle", current_time);
-	coder->left_dng->release_time = current_time + coder->config->time_to_compile + coder->config->dongle_cooldown;
+	coder->left_dng->release = current_time + coder->config->time_to_compile + coder->config->dongle_cooldown;
 	pthread_mutex_unlock(&coder->left_dng->lock);
 	pthread_mutex_lock(&coder->right_dng->lock);
 	log_event(coder->simul, coder->id, "has taken a dongle", current_time);
-	coder->right_dng->release_time = current_time + coder->config->time_to_compile + coder->config->dongle_cooldown;
+	coder->right_dng->release = current_time + coder->config->time_to_compile + coder->config->dongle_cooldown;
 	pthread_mutex_unlock(&coder->right_dng->lock);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	if (!work(coder, end_time, &ts))
@@ -176,10 +172,6 @@ void *coders_routine(void *arg)
 		request.arr_time = now;
 		request.deadline = coder->last_compile_time + coder->config->time_to_burnout;
 		heap_insert(coder->heap, request);
-		pthread_mutex_lock(&coder->sched->lock);
-		coder->sched->called = 1;
-		pthread_cond_signal(&coder->sched->cond);
-		pthread_mutex_unlock(&coder->sched->lock);
 		pthread_mutex_lock(&coder->coder_lock);
 		while (coder->perm == 0 && coder->alive)
 		{
@@ -215,83 +207,10 @@ int	check_dongles(dongle_t *d1, dongle_t *d2)
 	if (d1->owner_id == 0 && d2->owner_id == 0)
 	{
 		now = get_current_time();
-		res = now >= d1->release_time && now >= d2->release_time;
+		res = now >= d1->release && now >= d2->release;
 		return (res);
 	}
 	return (0);
-}
-
-void *sched_routine(void *arg)
-{
-	scheduler_t		*sched;
-	coder_t			*coder;
-	int				is_dongl_ok;
-	long long		left_end;
-	long long		right_end;
-	long long		wake_up;
-	struct timespec	wake_up_abs;
-
-	sched = (scheduler_t *)arg;
-	while (1)
-	{
-		pthread_mutex_lock(&sched->lock);
-		while (sched->alive && !sched->called)
-			pthread_cond_wait(&sched->cond, &sched->lock);
-		if (!sched->alive)
-		{
-			pthread_mutex_unlock(&sched->lock);
-			break;
-		}
-		sched->called = 0;
-		pthread_mutex_unlock(&sched->lock);
-		pthread_mutex_lock(&sched->heap->lock);
-		while (sched->heap->size > 0)
-		{
-			coder = sched->heap->reqs[0].coder;
-			pthread_mutex_lock(&coder->left_dng->lock);
-			pthread_mutex_lock(&coder->right_dng->lock);
-			is_dongl_ok = check_dongles(coder->left_dng, coder->right_dng);
-			if (is_dongl_ok == 1)
-			{
-				heap_extract(sched->heap, 0);
-				coder->left_dng->owner_id = coder->id;
-				coder->right_dng->owner_id = coder->id;
-				pthread_mutex_unlock(&coder->left_dng->lock);
-				pthread_mutex_unlock(&coder->right_dng->lock);
-				pthread_mutex_lock(&coder->coder_lock);
-				coder->perm = 1;
-				pthread_cond_signal(&coder->cond);
-				pthread_mutex_unlock(&coder->coder_lock);
-			}
-			else
-			{
-				left_end = coder->left_dng->release_time;
-				right_end = coder->right_dng->release_time;
-				pthread_mutex_unlock(&coder->left_dng->lock);
-				pthread_mutex_unlock(&coder->right_dng->lock);
-				if (left_end > right_end)
-					wake_up = left_end;
-				else
-					wake_up = right_end;
-				wake_up_abs = get_abs_time(wake_up);
-				pthread_mutex_unlock(&sched->heap->lock);
-				pthread_mutex_lock(&sched->lock);
-				if (!sched->called)
-					pthread_cond_timedwait(&sched->cond, &sched->lock, &wake_up_abs);
-				sched->called = 0;
-				if (!sched->alive)
-				{
-					pthread_mutex_unlock(&sched->lock);
-					return (NULL);
-				}
-				pthread_mutex_unlock(&sched->lock);
-				pthread_mutex_lock(&sched->heap->lock);
-				// re-check reqs[0] from the top after waking
-			}
-		}
-		pthread_mutex_unlock(&sched->heap->lock);
-	}
-	return (NULL);
 }
 
 void start_to_work(t_config *config, simul_t *simul)
@@ -300,22 +219,19 @@ void start_to_work(t_config *config, simul_t *simul)
 	dongle_t *dongles;
 	coder_t *coders;
 	shared_arg_t shared_arg;
-	scheduler_t	*sched;
 	monitor_t *mon;
 	int i;
 
 	heap = init_heap(config);
 	if (!heap)
 		return;
-	dongles = init_dongles(config->number_of_coders, simul->start);
-	sched = init_sched(heap);
+	dongles = init_dongles(config->number_of_coders);
 	shared_arg.conf = config;
 	shared_arg.dngls = dongles;
 	shared_arg.heap = heap;
 	shared_arg.sim = simul;
-	shared_arg.sched = sched;
 	coders = init_coders(shared_arg);
-	mon = init_monitor(config, simul, coders, sched);
+	mon = init_monitor(config, simul, coders);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -323,9 +239,7 @@ void start_to_work(t_config *config, simul_t *simul)
 		i++;
 	}
 	pthread_create(&mon->thread_id, NULL, monitor_routine, mon);
-	pthread_create(&sched->thread_id, NULL, sched_routine, sched);
 	pthread_join(mon->thread_id, NULL);
-	pthread_join(sched->thread_id, NULL);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
@@ -336,5 +250,4 @@ void start_to_work(t_config *config, simul_t *simul)
 	destroy_dongles(dongles, config->number_of_coders);
 	free(mon);
 	destroy_heap(heap);
-	destroy_sched(sched);
 }

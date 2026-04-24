@@ -12,7 +12,8 @@ MY_SRC = arg_parser.c    \
 		 heap.c          \
 		 scheduler.c     \
 		 simulation.c    \
-		 time_counter.c
+		 time_counter.c  \
+		 monitor.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)

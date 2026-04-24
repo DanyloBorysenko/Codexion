@@ -6,29 +6,11 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/19 10:51:26 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/23 14:41:06 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-monitor_t	*init_monitor(
-	t_config *config,
-	simul_t *simul,
-	coder_t *coders,
-	scheduler_t	*sched)
-{
-	monitor_t	*mon;
-
-	mon = malloc(sizeof(monitor_t));
-	if (!mon)
-		return (NULL);
-	mon->config = config;
-	mon->coders = coders;
-	mon->simul = simul;
-	mon->sched = sched;
-	return (mon);
-}
 
 coder_t	*init_coders(shared_arg_t arg)
 {
