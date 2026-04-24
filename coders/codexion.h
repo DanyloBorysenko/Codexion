@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 17:52:53 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:07:22 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,6 @@ typedef struct coder_s
 	int				alive;
 	long long		last_compile_time;
 	simul_t			*simul;
-	heap_t			*heap;
 }				coder_t;
 
 typedef struct monitor_s
@@ -92,7 +91,12 @@ typedef struct monitor_s
 	pthread_t	thread_id;
 	t_config	*config;
 	coder_t		*coders;
+	dongle_t	*dongles;
 	simul_t		*simul;
+	int			finished;
+	int			burned_out;
+	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
 } 				monitor_t;
 
 typedef struct shared_arg_s
@@ -107,8 +111,12 @@ void 			start_to_work(t_config *cfg, simul_t *simul);
 simul_t			*init_simul(void);
 void			destroy_simul(simul_t *sim);
 void			log_event(simul_t	*sim, int id, char *msg, long long time);
-monitor_t		*init_monitor(t_config *config, simul_t *simul,
-	coder_t *coders);
+monitor_t		*init_monitor(
+	t_config *config,
+	simul_t *simul,
+	coder_t *coders,
+	dongle_t *dongles);
+// void destroy_monitor(monitor_t *mon);
 coder_t			*init_coders(shared_arg_t init_arg);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(int coders_count, char *sched);

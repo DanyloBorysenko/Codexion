@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 17:49:40 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:18:49 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void wake_up_all(int count, coder_t	*coders)
+void wake_up_all(int count, coder_t	*coders, dongle_t *don)
 {
 	int	i;
 
@@ -23,6 +23,9 @@ void wake_up_all(int count, coder_t	*coders)
 		coders[i].alive = 0;
 		pthread_cond_signal(&coders[i].cond);
 		pthread_mutex_unlock(&coders[i].coder_lock);
+		pthread_mutex_lock(&don[i].lock);
+		pthread_cond_broadcast(&don[i].cond);
+		pthread_mutex_unlock(&don[i].lock);
 		i++;
 	}
 }
@@ -158,6 +161,28 @@ int compile(coder_t *coder)
 	return (1);
 }
 
+void	insert_req(coder_t *coder, req_t req)
+{
+	if (coder->id % 2 == 0)
+	{
+		pthread_mutex_lock(&coder->right_dng->lock);
+		heap_insert(coder->right_dng->heap, req);
+		pthread_mutex_unlock(&coder->right_dng->lock);
+		pthread_mutex_lock(&coder->left_dng->lock);
+		heap_insert(coder->left_dng->heap, req);
+		pthread_mutex_unlock(&coder->left_dng->lock);
+	}
+	else
+	{
+		pthread_mutex_lock(&coder->left_dng->lock);
+		heap_insert(coder->left_dng->heap, req);
+		pthread_mutex_unlock(&coder->left_dng->lock);
+		pthread_mutex_lock(&coder->right_dng->lock);
+		heap_insert(coder->right_dng->heap, req);
+		pthread_mutex_unlock(&coder->right_dng->lock);
+	}
+}
+
 void *coders_routine(void *arg)
 {
 	coder_t *coder;
@@ -171,7 +196,8 @@ void *coders_routine(void *arg)
 		request.coder = coder;
 		request.arr_time = now;
 		request.deadline = coder->last_compile_time + coder->config->time_to_burnout;
-		heap_insert(coder->heap, request);
+		insert_req(coder, request);
+
 		pthread_mutex_lock(&coder->coder_lock);
 		while (coder->perm == 0 && coder->alive)
 		{
@@ -221,14 +247,12 @@ void start_to_work(t_config *config, simul_t *simul)
 	monitor_t *mon;
 	int i;
 
-	if (!heap)
-		return;
-	dongles = init_dongles(config->number_of_coders);
+	dongles = init_dongles(config->number_of_coders, config->scheduler);
 	shared_arg.conf = config;
 	shared_arg.dngls = dongles;
 	shared_arg.sim = simul;
 	coders = init_coders(shared_arg);
-	mon = init_monitor(config, simul, coders);
+	mon = init_monitor(config, simul, coders, dongles);
 	i = 0;
 	while (i < config->number_of_coders)
 	{
