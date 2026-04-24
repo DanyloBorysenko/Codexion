@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 12:43:16 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 17:49:40 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,20 +215,17 @@ int	check_dongles(dongle_t *d1, dongle_t *d2)
 
 void start_to_work(t_config *config, simul_t *simul)
 {
-	heap_t *heap;
 	dongle_t *dongles;
 	coder_t *coders;
 	shared_arg_t shared_arg;
 	monitor_t *mon;
 	int i;
 
-	heap = init_heap(config);
 	if (!heap)
 		return;
 	dongles = init_dongles(config->number_of_coders);
 	shared_arg.conf = config;
 	shared_arg.dngls = dongles;
-	shared_arg.heap = heap;
 	shared_arg.sim = simul;
 	coders = init_coders(shared_arg);
 	mon = init_monitor(config, simul, coders);
@@ -249,5 +246,4 @@ void start_to_work(t_config *config, simul_t *simul)
 	destroy_coders(coders, config->number_of_coders);
 	destroy_dongles(dongles, config->number_of_coders);
 	free(mon);
-	destroy_heap(heap);
 }

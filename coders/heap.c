@@ -6,31 +6,30 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/23 13:48:06 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 18:05:46 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-heap_t	*init_heap(t_config *config)
+heap_t	*init_heap(int count, char *sched)
 {
-	req_t	*reqs;
 	heap_t	*heap;
+	req_t	*reqs;
 
-	reqs = malloc(sizeof(req_t) * config->number_of_coders);
-	if (!reqs)
-		return (NULL);
 	heap = malloc(sizeof(heap_t));
 	if (!heap)
+		return (NULL);
+	reqs = malloc(sizeof(req_t) * count);
+	if (!reqs)
 	{
-		free(reqs);
+		free(heap);
 		return (NULL);
 	}
-	heap->capacity = config->number_of_coders;
-	heap->sched = config->scheduler;
+	heap->capacity = count;
+	heap->sched = sched;
 	heap->reqs = reqs;
 	heap->size = 0;
-	pthread_mutex_init(&heap->lock, NULL);
 	return (heap);
 }
 
@@ -38,8 +37,8 @@ void	destroy_heap(heap_t *heap)
 {
 	if (!heap)
 		return ;
-	pthread_mutex_destroy(&heap->lock);
-	free(heap->reqs);
+	if (heap->reqs)
+		free(heap->reqs);
 	free(heap);
 }
 
@@ -115,18 +114,13 @@ void	heap_insert(heap_t *heap, req_t req)
 {
 	int	child_ind;
 
-	pthread_mutex_lock(&heap->lock);
 	if (heap->size >= heap->capacity)
-	{
-		pthread_mutex_unlock(&heap->lock);
 		return ;
-	}
 	child_ind = heap->size;
 	heap->reqs[child_ind] = req;
 	heap->size++;
 	printf("INSERT req, coder id %d size=%d, deadline %llu, arrivaltime %llu\n", req.coder->id, heap->size, req.deadline, req.arr_time);
 	heapify_up(heap, child_ind);
-	pthread_mutex_unlock(&heap->lock);
 }
 
 req_t	heap_extract(heap_t *heap, int index)
@@ -134,8 +128,14 @@ req_t	heap_extract(heap_t *heap, int index)
 	req_t	removed;
 
 	removed = heap->reqs[index];
-	heap->reqs[index] = heap->reqs[heap->size - 1];
-	heap->size--;
-	heapify_down(heap, index);
+	if (index < heap->size - 1)
+	{
+		heap->reqs[index] = heap->reqs[heap->size - 1];
+		heap->size--;
+		heapify_down(heap, index);
+		heapify_up(heap, index);
+	}
+	else
+		heap->size--;
 	return (removed);
 }

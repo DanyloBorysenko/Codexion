@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/23 14:41:06 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/24 16:26:59 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,6 @@ coder_t	*init_coders(shared_arg_t arg)
 		coders[i].compiles_done = 0;
 		coders[i].last_compile_time = arg.sim->start;
 		coders[i].simul = arg.sim;
-		coders[i].heap = arg.heap;
-		coders[i].sched = arg.sched;
 		pthread_mutex_init(&coders[i].coder_lock, NULL);
 		pthread_cond_init(&coders[i].cond, NULL);
 		i++;
