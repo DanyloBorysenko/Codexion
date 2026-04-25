@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 19:07:22 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/25 20:12:45 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,19 +45,9 @@ typedef struct simul_s
 	pthread_mutex_t	print_lock;
 }				simul_t;
 
-typedef struct dongle_s
-{
-	int				num;
-	int				owner_id;
-	long long		release;
-	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
-	heap_t			*heap;
-}				dongle_t;
-
 typedef struct req_s
 {
-	coder_t		*coder;
+	int			coder_id;
 	long long 	arr_time;
 	long long 	deadline;
 }				req_t;
@@ -69,6 +59,17 @@ typedef struct heap_s
 	int				capacity;
 	char    		*sched;
 }				heap_t;
+
+typedef struct dongle_s
+{
+	int				num;
+	int				in_use;
+	long long		release;
+	int				cooldown;
+	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
+	heap_t			*heap;
+}				dongle_t;
 
 typedef struct coder_s
 {
@@ -119,7 +120,7 @@ monitor_t		*init_monitor(
 // void destroy_monitor(monitor_t *mon);
 coder_t			*init_coders(shared_arg_t init_arg);
 void			destroy_coders(coder_t *coders, int count);
-dongle_t		*init_dongles(int coders_count, char *sched);
+dongle_t    	*init_dongles(int coders_count, int cooldown, char *sched);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(int count, char *sched);
 void			heap_insert(heap_t *heap, req_t req);

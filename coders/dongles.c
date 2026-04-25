@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 17:53:58 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/25 19:41:42 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-dongle_t    *init_dongles(int coders_count, char *sched)
+dongle_t    *init_dongles(int coders_count, int cooldown, char *sched)
 {
     dongle_t    *dongles;
     int         i;
@@ -23,12 +23,13 @@ dongle_t    *init_dongles(int coders_count, char *sched)
 
     for (i = 0; i < coders_count; i++)
     {
-        dongles[i].heap = NULL; 
+        dongles[i].heap = NULL;
         pthread_mutex_init(&dongles[i].lock, NULL);
         pthread_cond_init(&dongles[i].cond, NULL);
         dongles[i].num = i + 1;
-        dongles[i].owner_id = 0;
+        dongles[i].in_use = 0;
         dongles[i].release = 0;
+		dongles[i].cooldown = cooldown;
         dongles[i].heap = init_heap(HEAP_SIZE, sched);
         if (!dongles[i].heap)
         {
