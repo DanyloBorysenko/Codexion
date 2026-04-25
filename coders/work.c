@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/25 20:14:29 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/25 20:35:53 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,9 @@ void insert_req(coder_t *coder, req_t req)
 	pthread_mutex_lock(&first->lock);
 	pthread_mutex_lock(&second->lock);
 	heap_insert(first->heap, req);
+	printf("INSERTed req, dongle %d, coder id %d, deadline %llu, arrivaltime %llu\n", first->num, req.coder_id, req.deadline, req.arr_time);
 	heap_insert(second->heap, req);
+	printf("INSERTed req, dongle %d, coder id %d, deadline %llu, arrivaltime %llu\n", second->num, req.coder_id, req.deadline, req.arr_time);
 	pthread_mutex_unlock(&second->lock);
 	pthread_mutex_unlock(&first->lock);
 }

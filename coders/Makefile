@@ -10,7 +10,6 @@ MY_SRC = arg_parser.c    \
 		 initialisation.c\
 		 dongles.c       \
 		 heap.c          \
-		 scheduler.c     \
 		 simulation.c    \
 		 time_counter.c  \
 		 monitor.c
