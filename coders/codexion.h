@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/25 20:12:45 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 12:26:00 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,9 @@ typedef struct s_config
 
 typedef struct simul_s
 {
-	int	finished_coders;
-	long long start;
+	int				finished_coders;
+	int				is_finished;
+	long long		start;
 	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	print_lock;
 }				simul_t;

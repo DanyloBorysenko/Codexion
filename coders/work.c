@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/25 20:35:53 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 12:26:21 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,9 +42,11 @@ void *monitor_routine(void *arg)
 	stop = 0;
 	while (stop == 0)
 	{
+		// printf("%llu: Monitor is cheking\n", get_current_time() - mon->simul->start);
 		pthread_mutex_lock(&mon->simul->sim_lock);
 		if (mon->simul->finished_coders == mon->config->number_of_coders)
 		{
+			mon->simul->is_finished = 1;
 			pthread_mutex_unlock(&mon->simul->sim_lock);
 			wake_up_all(mon->config->number_of_coders, mon->coders, mon->dongles);
 			printf("Finished = all\n");
@@ -54,13 +56,15 @@ void *monitor_routine(void *arg)
 		i = 0;
 		while (i < mon->config->number_of_coders)
 		{
-
 			now = get_current_time();
 			pthread_mutex_lock(&mon->coders[i].coder_lock);
 			last = mon->coders[i].last_compile_time;
 			pthread_mutex_unlock(&mon->coders[i].coder_lock);
 			if (now - last > mon->config->time_to_burnout)
 			{
+				pthread_mutex_lock(&mon->simul->sim_lock);
+				mon->simul->is_finished = 1;
+				pthread_mutex_unlock(&mon->simul->sim_lock);
 				stop = 1;
 				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
 				wake_up_all(mon->config->number_of_coders, mon->coders, mon->dongles);
@@ -268,11 +272,11 @@ void *coders_routine(void *arg)
 		insert_req(coder, request);
 		if (!acquire_dongles(coder))
 			break;
-		if (!compile(coder))
+		if (!coder->alive || !compile(coder))
 			break;
-		if (!debug(coder))
+		if (!coder->alive || !debug(coder))
 			break;
-		if (!refact(coder))
+		if (!coder->alive || !refact(coder))
 			break;
 	}
 	return (NULL);
