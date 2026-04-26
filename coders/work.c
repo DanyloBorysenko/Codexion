@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 16:38:42 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 17:58:20 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,6 +265,8 @@ void *coders_routine(void *arg)
 	req_t request;
 
 	coder = (coder_t *)arg;
+	if (coder->left_dng == coder->right_dng)
+			return (NULL);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = get_current_time();
 	pthread_mutex_unlock(&coder->coder_lock);

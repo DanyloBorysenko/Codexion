@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 17:42:14 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 18:09:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,41 +61,21 @@ int	is_sched_val_correct(char *actual, char **sched_val)
 	return (0);
 }
 
-t_config	*create_config(int *args, char *sched_value)
+void	parse_arg(int argc, char **argv, char **sched_vals, t_config *conf)
 {
-	t_config		*config;
-
-	config = malloc(sizeof(t_config));
-	if (!config)
-		return (NULL);
-	config->number_of_coders = args[CONF_CODERS_IDX];
-	config->time_to_burnout = args[CONF_BURNOUT_IDX];
-	config->time_to_compile = args[CONF_COMPILE_IDX];
-	config->time_to_debug = args[CONF_DEBUG_IDX];
-	config->time_to_refactor = args[CONF_REFACTOR_IDX];
-	config->number_of_compiles_required = args[CONF_COMP_REQ_IDX];
-	config->dongle_cooldown = args[CONF_COOLDOWN_IDX];
-	config->scheduler = sched_value;
-	return (config);
-}
-
-t_config	*parse_arg(int argc, char **argv, char **sched_values)
-{
-	int	i;
-	int	args[ARG_COUNT - 2];
-
 	if (argc != ARG_COUNT)
 	{
 		printf("Args count: expected - %d, actual - %d\n", ARG_COUNT, argc);
 		exit(EXIT_FAILURE);
 	}
-	if (!is_sched_val_correct(argv[ARG_COUNT - 1], sched_values))
+	if (!is_sched_val_correct(argv[ARG_COUNT - 1], sched_vals))
 		terminate_program("Not correct scheduler");
-	i = 0;
-	while (i < argc - 2)
-	{
-		args[i] = strict_atoi(argv[i + 1]);
-		i++;
-	}
-	return (create_config(args, argv[ARG_COUNT - 1]));
+	conf->number_of_coders = strict_atoi(argv[ARGV_CODERS]);
+    conf->time_to_burnout = strict_atoi(argv[ARGV_BURNOUT]);
+    conf->time_to_compile = strict_atoi(argv[ARGV_COMPILE]);
+    conf->time_to_debug = strict_atoi(argv[ARGV_DEBUG]);
+    conf->time_to_refactor = strict_atoi(argv[ARGV_REFACTOR]);
+    conf->number_of_compiles_required = strict_atoi(argv[ARGV_COMP_REQ]);
+    conf->dongle_cooldown = strict_atoi(argv[ARGV_COOLDOWN]);
+    conf->scheduler = argv[ARGV_SCHED];
 }

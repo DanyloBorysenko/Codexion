@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 17:46:57 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 18:10:09 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,14 @@
 
 # define HEAP_SIZE 2
 
-# define CONF_CODERS_IDX 0
-# define CONF_BURNOUT_IDX 1
-# define CONF_COMPILE_IDX 2
-# define CONF_DEBUG_IDX 3
-# define CONF_REFACTOR_IDX 4
-# define CONF_COMP_REQ_IDX 5
-# define CONF_COOLDOWN_IDX 6
+#define ARGV_CODERS 1
+#define ARGV_BURNOUT 2
+#define ARGV_COMPILE 3
+#define ARGV_DEBUG 4
+#define ARGV_REFACTOR 5
+#define ARGV_COMP_REQ 6
+#define ARGV_COOLDOWN 7
+#define ARGV_SCHED 8
 
 typedef struct s_config
 {
@@ -122,7 +123,7 @@ typedef struct shared_arg_s
 	dongle_t	*dngls;
 }				shared_arg_t;
 
-t_config		*parse_arg(int argc, char **argv, char **possible_schedul_val);
+void			parse_arg(int argc, char **argv, char **sched_vals, t_config *conf);
 void 			start_to_work(t_config *cfg, simul_t *simul);
 simul_t			*init_simul(void);
 void			destroy_simul(simul_t *sim);
