@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 13:13:35 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 16:06:35 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ typedef struct simul_s
 	long long		start;
 	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	print_lock;
+	pthread_cond_t	cond;
 }				simul_t;
 
 typedef struct req_s
@@ -76,13 +77,16 @@ typedef struct coder_s
 {
 	int				id;
 	pthread_t		thread_id;
-	t_config		*config;
 	dongle_t		*left_dng;
 	dongle_t		*right_dng;
+	int				time_to_burnout;
+	int				time_to_compile;
+	int				time_to_debug;
+	int				time_to_refactor;
+	int				num_of_comp_req;
 	int				compiles_done;
 	pthread_mutex_t	coder_lock;
 	pthread_cond_t	cond;
-	int				alive;
 	long long		last_compile_time;
 	simul_t			*simul;
 }				coder_t;

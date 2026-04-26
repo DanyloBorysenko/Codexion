@@ -6,16 +6,33 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 13:13:20 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 16:20:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-coder_t	*init_coders(shared_arg_t arg)
+static void init_coder(coder_t *cod, int i, shared_arg_t arg)
 {
-	coder_t		*coders;
-	int			i;
+	cod->id = i + 1;
+	cod->left_dng = &arg.dngls[i];
+	cod->right_dng = &arg.dngls[((i + 1) % arg.conf->number_of_coders)];
+	cod->compiles_done = 0;
+	cod->time_to_burnout = arg.conf->time_to_burnout;
+	cod->time_to_compile = arg.conf->time_to_compile;
+	cod->time_to_debug = arg.conf->time_to_debug;
+	cod->time_to_refactor = arg.conf->time_to_refactor;
+	cod->num_of_comp_req = arg.conf->number_of_compiles_required;
+	cod->last_compile_time = arg.sim->start;
+	cod->simul = arg.sim;
+	pthread_mutex_init(&cod->coder_lock, NULL);
+	pthread_cond_init(&cod->cond, NULL);
+}
+
+coder_t *init_coders(shared_arg_t arg)
+{
+	coder_t *coders;
+	int i;
 
 	coders = malloc(sizeof(coder_t) * arg.conf->number_of_coders);
 	if (!coders)
@@ -23,27 +40,18 @@ coder_t	*init_coders(shared_arg_t arg)
 	i = 0;
 	while (i < arg.conf->number_of_coders)
 	{
-		coders[i].id = i + 1;
-		coders[i].config = arg.conf;
-		coders[i].alive = 1;
-		coders[i].left_dng = &arg.dngls[i];
-		coders[i].right_dng = &arg.dngls[((i + 1) % arg.conf->number_of_coders)];
-		coders[i].compiles_done = 0;
-		coders[i].last_compile_time = arg.sim->start;
-		coders[i].simul = arg.sim;
-		pthread_mutex_init(&coders[i].coder_lock, NULL);
-		pthread_cond_init(&coders[i].cond, NULL);
+		init_coder(&coders[i], i, arg);
 		i++;
 	}
 	return (coders);
 }
 
-void	destroy_coders(coder_t *coders, int count)
+void destroy_coders(coder_t *coders, int count)
 {
-	int	i;
+	int i;
 
 	if (!coders)
-		return ;
+		return;
 	i = 0;
 	while (i < count)
 	{

@@ -6,23 +6,22 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 13:26:34 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 16:31:52 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void wake_up_all(int count, coder_t	*coders, dongle_t *don)
+void	wake_up_all(int count, dongle_t *don, simul_t *sim)
 {
 	int	i;
 
+	pthread_mutex_lock(&sim->sim_lock);
+	pthread_cond_broadcast(&sim->cond);
+	pthread_mutex_unlock(&sim->sim_lock);
 	i = 0;
 	while (i < count)
 	{
-		pthread_mutex_lock(&coders[i].coder_lock);
-		coders[i].alive = 0;
-		pthread_cond_signal(&coders[i].cond);
-		pthread_mutex_unlock(&coders[i].coder_lock);
 		pthread_mutex_lock(&don[i].lock);
 		pthread_cond_broadcast(&don[i].cond);
 		pthread_mutex_unlock(&don[i].lock);
@@ -30,17 +29,15 @@ void wake_up_all(int count, coder_t	*coders, dongle_t *don)
 	}
 }
 
-void *monitor_routine(void *arg)
+void	*monitor_routine(void *arg)
 {
-	monitor_t *mon;
-	long long now;
-	long long last;
-	int stop;
+	monitor_t	*mon;
+	long long	now;
+	long long	last;
 	int i;
 
 	mon = (monitor_t*)arg;
-	stop = 0;
-	while (stop == 0)
+	while (1)
 	{
 		// printf("%llu: Monitor is cheking\n", get_current_time() - mon->simul->start);
 		pthread_mutex_lock(&mon->simul->sim_lock);
@@ -48,9 +45,9 @@ void *monitor_routine(void *arg)
 		{
 			mon->simul->is_finished = 1;
 			pthread_mutex_unlock(&mon->simul->sim_lock);
-			wake_up_all(mon->config->number_of_coders, mon->coders, mon->dongles);
-			printf("Finished = all\n");
-			break;
+			wake_up_all(mon->config->number_of_coders, mon->dongles, mon->simul);
+			// printf("Finished = all\n");
+			return (NULL);
 		}
 		pthread_mutex_unlock(&mon->simul->sim_lock);
 		i = 0;
@@ -65,38 +62,45 @@ void *monitor_routine(void *arg)
 				pthread_mutex_lock(&mon->simul->sim_lock);
 				mon->simul->is_finished = 1;
 				pthread_mutex_unlock(&mon->simul->sim_lock);
-				stop = 1;
 				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
-				wake_up_all(mon->config->number_of_coders, mon->coders, mon->dongles);
-				break;
+				wake_up_all(mon->config->number_of_coders, mon->dongles, mon->simul);
+				return (NULL);
 			}
 			i++;
 		}
-		if (stop == 1)
-			break;
 		usleep(1000);
 	}
 	return (NULL);
+}
+
+int is_simul_finished(simul_t *sim)
+{
+	int is_finished;
+
+	pthread_mutex_lock(&sim->sim_lock);
+	is_finished = sim->is_finished;
+	pthread_mutex_unlock(&sim->sim_lock);
+	return is_finished;
 }
 
 int work(coder_t *coder, long long end_time, struct timespec *ts)
 {
 	long long	current_time;
 
-	pthread_mutex_lock(&coder->coder_lock);
-	while (coder->alive)
+	pthread_mutex_lock(&coder->simul->sim_lock);
+	while (!coder->simul->is_finished)
 	{
 		current_time = get_current_time();
 		if (current_time >= end_time)
 			break;
-		pthread_cond_timedwait(&coder->cond, &coder->coder_lock, ts);
+		pthread_cond_timedwait(&coder->simul->cond, &coder->simul->sim_lock, ts);
 	}
-	if (!coder->alive)
+	if (coder->simul->is_finished)
 	{
-		pthread_mutex_unlock(&coder->coder_lock);
+		pthread_mutex_unlock(&coder->simul->sim_lock);
 		return (0);
 	}
-	pthread_mutex_unlock(&coder->coder_lock);
+	pthread_mutex_unlock(&coder->simul->sim_lock);
 	return (1);
 }
 
@@ -107,7 +111,7 @@ int refact(coder_t *coder)
 	long long end_time;
 
 	current_time = get_current_time();
-	end_time = current_time + coder->config->time_to_refactor;
+	end_time = current_time + coder->time_to_refactor;
 	ts = get_abs_time(end_time);
 	log_event(coder->simul, coder->id, "is refactoring", current_time);
 	return (work(coder, end_time, &ts));
@@ -120,7 +124,7 @@ int debug(coder_t *coder)
 	long long end_time;
 
 	current_time = get_current_time();
-	end_time = current_time + coder->config->time_to_debug;
+	end_time = current_time + coder->time_to_debug;
 	ts = get_abs_time(end_time);
 	log_event(coder->simul, coder->id, "is debugging", current_time);
 	return (work(coder, end_time, &ts));
@@ -149,7 +153,7 @@ int compile(coder_t *coder)
 	long long end_time;
 
 	current_time = get_current_time();
-	end_time = current_time + coder->config->time_to_compile;
+	end_time = current_time + coder->time_to_compile;
 	ts = get_abs_time(end_time);
 	pthread_mutex_lock(&coder->coder_lock);
 	coder->last_compile_time = current_time;
@@ -159,7 +163,7 @@ int compile(coder_t *coder)
 		return (0);
 	release_dongles(coder->left_dng, coder->right_dng);
 	coder->compiles_done++;
-	if (coder->compiles_done == coder->config->number_of_compiles_required)
+	if (coder->compiles_done == coder->num_of_comp_req)
 	{
 		pthread_mutex_lock(&coder->simul->sim_lock);
 		coder->simul->finished_coders = coder->simul->finished_coders + 1;
@@ -194,15 +198,6 @@ void insert_req(coder_t *coder, req_t req)
 	pthread_mutex_unlock(&first->lock);
 }
 
-int is_coder_alive(coder_t *coder)
-{
-    int alive;
-    pthread_mutex_lock(&coder->coder_lock);
-    alive = coder->alive;
-    pthread_mutex_unlock(&coder->coder_lock);
-    return alive;
-}
-
 int	acquire_dongles(coder_t *coder)
 {
 	dongle_t	*first;
@@ -220,7 +215,7 @@ int	acquire_dongles(coder_t *coder)
 		second = coder->right_dng;
 	}
 	pthread_mutex_lock(&first->lock);
-	while (is_coder_alive(coder))
+	while (!is_simul_finished(coder->simul))
 	{
 		if (first->heap->reqs[0].coder_id == coder->id && !first->in_use && get_current_time() >= first->release)
 			break;
@@ -232,7 +227,7 @@ int	acquire_dongles(coder_t *coder)
 		else
 			pthread_cond_wait(&first->cond, &first->lock);
 	}
-	if (!is_coder_alive(coder))
+	if (is_simul_finished(coder->simul))
 	{
 		pthread_mutex_unlock(&first->lock);
 		return (0);
@@ -240,9 +235,8 @@ int	acquire_dongles(coder_t *coder)
 	first->in_use = 1;
 	log_event(coder->simul, coder->id, "has taken a dongle", get_current_time());
 	pthread_mutex_unlock(&first->lock);
-
 	pthread_mutex_lock(&second->lock);
-	while (is_coder_alive(coder))
+	while (!is_simul_finished(coder->simul))
 	{
 		if (second->heap->reqs[0].coder_id == coder->id && !second->in_use && get_current_time() >= second->release)
 			break;
@@ -254,7 +248,7 @@ int	acquire_dongles(coder_t *coder)
 		else
 			pthread_cond_wait(&second->cond, &second->lock);
 	}
-	if (!is_coder_alive(coder))
+	if (is_simul_finished(coder->simul))
 	{
 		pthread_mutex_unlock(&second->lock);
 		return (0);
@@ -272,20 +266,23 @@ void *coders_routine(void *arg)
 	long long now;
 
 	coder = (coder_t *)arg;
+	pthread_mutex_lock(&coder->coder_lock);
+	coder->last_compile_time = get_current_time();
+	pthread_mutex_unlock(&coder->coder_lock);
 	while (1)
 	{
 		now = get_current_time();
 		request.coder_id = coder->id;
 		request.arr_time = now;
-		request.deadline = coder->last_compile_time + coder->config->time_to_burnout;
+		request.deadline = coder->last_compile_time + coder->time_to_burnout;
 		insert_req(coder, request);
 		if (!acquire_dongles(coder))
 			break;
-		if (!is_coder_alive(coder) || !compile(coder))
+		if (!compile(coder))
 			break;
-		if (!is_coder_alive(coder) || !debug(coder))
+		if (!debug(coder))
 			break;
-		if (!is_coder_alive(coder) || !refact(coder))
+		if (!refact(coder))
 			break;
 	}
 	return (NULL);

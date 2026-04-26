@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 12:56:26 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 12:26:30 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 14:08:03 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ simul_t	*init_simul(void)
 		return (NULL);
 	pthread_mutex_init(&ptr->sim_lock, NULL);
 	pthread_mutex_init(&ptr->print_lock, NULL);
+	pthread_cond_init(&ptr->cond, NULL);
 	ptr->finished_coders = 0;
 	ptr->is_finished = 0;
 	gettimeofday(&tv, NULL);
@@ -35,5 +36,6 @@ void	destroy_simul(simul_t *sim)
 {
 	pthread_mutex_destroy(&sim->sim_lock);
 	pthread_mutex_destroy(&sim->print_lock);
+	pthread_cond_destroy(&sim->cond);
 	free(sim);
 }
