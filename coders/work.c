@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 12:26:21 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 13:26:34 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,6 +194,15 @@ void insert_req(coder_t *coder, req_t req)
 	pthread_mutex_unlock(&first->lock);
 }
 
+int is_coder_alive(coder_t *coder)
+{
+    int alive;
+    pthread_mutex_lock(&coder->coder_lock);
+    alive = coder->alive;
+    pthread_mutex_unlock(&coder->coder_lock);
+    return alive;
+}
+
 int	acquire_dongles(coder_t *coder)
 {
 	dongle_t	*first;
@@ -211,7 +220,7 @@ int	acquire_dongles(coder_t *coder)
 		second = coder->right_dng;
 	}
 	pthread_mutex_lock(&first->lock);
-	while (coder->alive)
+	while (is_coder_alive(coder))
 	{
 		if (first->heap->reqs[0].coder_id == coder->id && !first->in_use && get_current_time() >= first->release)
 			break;
@@ -223,7 +232,7 @@ int	acquire_dongles(coder_t *coder)
 		else
 			pthread_cond_wait(&first->cond, &first->lock);
 	}
-	if (!coder->alive)
+	if (!is_coder_alive(coder))
 	{
 		pthread_mutex_unlock(&first->lock);
 		return (0);
@@ -233,7 +242,7 @@ int	acquire_dongles(coder_t *coder)
 	pthread_mutex_unlock(&first->lock);
 
 	pthread_mutex_lock(&second->lock);
-	while (coder->alive)
+	while (is_coder_alive(coder))
 	{
 		if (second->heap->reqs[0].coder_id == coder->id && !second->in_use && get_current_time() >= second->release)
 			break;
@@ -245,7 +254,7 @@ int	acquire_dongles(coder_t *coder)
 		else
 			pthread_cond_wait(&second->cond, &second->lock);
 	}
-	if (!coder->alive)
+	if (!is_coder_alive(coder))
 	{
 		pthread_mutex_unlock(&second->lock);
 		return (0);
@@ -272,30 +281,14 @@ void *coders_routine(void *arg)
 		insert_req(coder, request);
 		if (!acquire_dongles(coder))
 			break;
-		if (!coder->alive || !compile(coder))
+		if (!is_coder_alive(coder) || !compile(coder))
 			break;
-		if (!coder->alive || !debug(coder))
+		if (!is_coder_alive(coder) || !debug(coder))
 			break;
-		if (!coder->alive || !refact(coder))
+		if (!is_coder_alive(coder) || !refact(coder))
 			break;
 	}
 	return (NULL);
-}
-
-int	check_dongles(dongle_t *d1, dongle_t *d2)
-{
-	long long now;
-	int			res;
-
-	if (d1 == d2)
-		return (-1);
-	if (d1->in_use == 0 && d2->in_use == 0)
-	{
-		now = get_current_time();
-		res = now >= d1->release && now >= d2->release;
-		return (res);
-	}
-	return (0);
 }
 
 void start_to_work(t_config *config, simul_t *simul)

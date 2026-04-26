@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/24 16:26:59 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 13:13:20 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ coder_t	*init_coders(shared_arg_t arg)
 	{
 		coders[i].id = i + 1;
 		coders[i].config = arg.conf;
-		coders[i].perm = 0;
 		coders[i].alive = 1;
 		coders[i].left_dng = &arg.dngls[i];
 		coders[i].right_dng = &arg.dngls[((i + 1) % arg.conf->number_of_coders)];
