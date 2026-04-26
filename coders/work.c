@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 16:31:52 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 16:38:42 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,7 +263,6 @@ void *coders_routine(void *arg)
 {
 	coder_t *coder;
 	req_t request;
-	long long now;
 
 	coder = (coder_t *)arg;
 	pthread_mutex_lock(&coder->coder_lock);
@@ -271,18 +270,13 @@ void *coders_routine(void *arg)
 	pthread_mutex_unlock(&coder->coder_lock);
 	while (1)
 	{
-		now = get_current_time();
 		request.coder_id = coder->id;
-		request.arr_time = now;
+		request.arr_time = get_current_time();
 		request.deadline = coder->last_compile_time + coder->time_to_burnout;
 		insert_req(coder, request);
 		if (!acquire_dongles(coder))
 			break;
-		if (!compile(coder))
-			break;
-		if (!debug(coder))
-			break;
-		if (!refact(coder))
+		if (!compile(coder) || !debug(coder) || !refact(coder))
 			break;
 	}
 	return (NULL);

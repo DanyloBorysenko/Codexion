@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   initialisation.c                                   :+:      :+:    :+:   */
+/*   coders.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 16:20:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 16:35:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-static void init_coder(coder_t *cod, int i, shared_arg_t arg)
+static void	init_coder(coder_t *cod, int i, shared_arg_t arg)
 {
 	cod->id = i + 1;
 	cod->left_dng = &arg.dngls[i];
@@ -29,10 +29,10 @@ static void init_coder(coder_t *cod, int i, shared_arg_t arg)
 	pthread_cond_init(&cod->cond, NULL);
 }
 
-coder_t *init_coders(shared_arg_t arg)
+coder_t	*init_coders(shared_arg_t arg)
 {
-	coder_t *coders;
-	int i;
+	coder_t	*coders;
+	int		i;
 
 	coders = malloc(sizeof(coder_t) * arg.conf->number_of_coders);
 	if (!coders)
@@ -46,12 +46,12 @@ coder_t *init_coders(shared_arg_t arg)
 	return (coders);
 }
 
-void destroy_coders(coder_t *coders, int count)
+void	destroy_coders(coder_t *coders, int count)
 {
-	int i;
+	int	i;
 
 	if (!coders)
-		return;
+		return ;
 	i = 0;
 	while (i < count)
 	{

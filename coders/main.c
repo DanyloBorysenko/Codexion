@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:06 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/17 13:01:15 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 17:47:26 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,12 @@
 int	main(int argc, char	**argv)
 {
 	t_config	*config;
-	char		*scheduler_values[3];
+	char		*sched_values[SCHED_COUNT];
 	simul_t		*simulation;
 
-	scheduler_values[0] = "fifo";
-	scheduler_values[1] = "edf";
-	scheduler_values[2] = NULL;
-	config = parse_arg(argc, argv, scheduler_values);
+	sched_values[FIFO_SCHED_IND] = "fifo";
+	sched_values[EDF_SCHED_IND] = "edf";
+	config = parse_arg(argc, argv, sched_values);
 	simulation = init_simul();
 	start_to_work(config, simulation);
 	free(config);

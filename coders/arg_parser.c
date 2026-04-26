@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/06 18:00:00 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 17:42:14 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,51 +43,53 @@ int	strict_atoi(char *str)
 	return ((int)res);
 }
 
-int	is_sched_val_correct(char *scheduler_value, char **possible_schedul_val)
+int	is_sched_val_correct(char *actual, char **sched_val)
 {
 	int	i;
 	int	is_correct;
 
 	i = 0;
-	while (possible_schedul_val[i])
+	while (i < SCHED_COUNT)
 	{
-		is_correct = strcmp(possible_schedul_val[i], scheduler_value);
-		if (is_correct == 0)
+		if (!sched_val[i])
 			return (0);
+		is_correct = strcmp(sched_val[i], actual);
+		if (is_correct == 0)
+			return (1);
 		i++;
 	}
-	return (-1);
+	return (0);
 }
 
-t_config	*create_config(int *args, char *scheduler_value)
+t_config	*create_config(int *args, char *sched_value)
 {
 	t_config		*config;
 
 	config = malloc(sizeof(t_config));
 	if (!config)
 		return (NULL);
-	config->number_of_coders = args[0];
-	config->time_to_burnout = args[1];
-	config->time_to_compile = args[2];
-	config->time_to_debug = args[3];
-	config->time_to_refactor = args[4];
-	config->number_of_compiles_required = args[5];
-	config->dongle_cooldown = args[6];
-	config->scheduler = scheduler_value;
+	config->number_of_coders = args[CONF_CODERS_IDX];
+	config->time_to_burnout = args[CONF_BURNOUT_IDX];
+	config->time_to_compile = args[CONF_COMPILE_IDX];
+	config->time_to_debug = args[CONF_DEBUG_IDX];
+	config->time_to_refactor = args[CONF_REFACTOR_IDX];
+	config->number_of_compiles_required = args[CONF_COMP_REQ_IDX];
+	config->dongle_cooldown = args[CONF_COOLDOWN_IDX];
+	config->scheduler = sched_value;
 	return (config);
 }
 
-t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
+t_config	*parse_arg(int argc, char **argv, char **sched_values)
 {
 	int	i;
-	int	args[7];
+	int	args[ARG_COUNT - 2];
 
-	if (argc != 9)
+	if (argc != ARG_COUNT)
 	{
-		printf("Expected count of argc - 9, actual - %d\n", argc);
+		printf("Args count: expected - %d, actual - %d\n", ARG_COUNT, argc);
 		exit(EXIT_FAILURE);
 	}
-	if (is_sched_val_correct(argv[8], possible_schedul_val) == -1)
+	if (!is_sched_val_correct(argv[ARG_COUNT - 1], sched_values))
 		terminate_program("Not correct scheduler");
 	i = 0;
 	while (i < argc - 2)
@@ -95,5 +97,5 @@ t_config	*parse_arg(int argc, char **argv, char **possible_schedul_val)
 		args[i] = strict_atoi(argv[i + 1]);
 		i++;
 	}
-	return (create_config(args, argv[8]));
+	return (create_config(args, argv[ARG_COUNT - 1]));
 }

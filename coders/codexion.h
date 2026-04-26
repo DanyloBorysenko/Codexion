@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 16:06:35 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/26 17:46:57 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,20 @@
 # include <sys/time.h>
 # include <pthread.h>
 
-#ifndef HEAP_SIZE
+# define SCHED_COUNT 2
+# define ARG_COUNT 9
+# define FIFO_SCHED_IND 0
+# define EDF_SCHED_IND 1
+
 # define HEAP_SIZE 2
-#endif
+
+# define CONF_CODERS_IDX 0
+# define CONF_BURNOUT_IDX 1
+# define CONF_COMPILE_IDX 2
+# define CONF_DEBUG_IDX 3
+# define CONF_REFACTOR_IDX 4
+# define CONF_COMP_REQ_IDX 5
+# define CONF_COOLDOWN_IDX 6
 
 typedef struct s_config
 {
