@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   work.c                                             :+:      :+:    :+:   */
+/*   start.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 15:39:44 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/27 16:21:14 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,24 +50,16 @@ static void	destroy_components(t_components *comp, int coders_count)
 
 void	start_simul(t_config *config)
 {
-	t_components	compnts;
+	t_components	c;
+	int				success;
 
-	memset(&compnts, 0, sizeof(t_components));
-	if (!init_components(config, &compnts))
-	{
-		destroy_components(&compnts, config->num_of_cod);
-		return ;
-	}
-	if (!launch_coders(compnts.coders, config->num_of_cod))
-	{
-		destroy_components(&compnts, config->num_of_cod);
-		return ;
-	}
-	if (pthread_create(&compnts.mon->thread_id, NULL, mon_routine, compnts.mon))
-	{
-		destroy_components(&compnts, config->num_of_cod);
-		return ;
-	}
-	join_threads(compnts.mon, compnts.coders, config->num_of_cod);
-	destroy_components(&compnts, config->num_of_cod);
+	memset(&c, 0, sizeof(t_components));
+	success = init_components(config, &c);
+	if (success)
+		success = launch_coders(c.coders, config->num_of_cod);
+	if (success)
+		success = !pthread_create(&c.mon->thread_id, NULL, mon_routine, c.mon);
+	if (success)
+		join_threads(c.mon, c.coders, config->num_of_cod);
+	destroy_components(&c, config->num_of_cod);
 }
