@@ -1,87 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   work.c                                             :+:      :+:    :+:   */
+/*   coders_logic.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 17:58:20 by danborys         ###   ########.fr       */
+/*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
+/*   Updated: 2026/04/27 15:39:11 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-void	wake_up_all(int count, dongle_t *don, simul_t *sim)
-{
-	int	i;
-
-	pthread_mutex_lock(&sim->sim_lock);
-	pthread_cond_broadcast(&sim->cond);
-	pthread_mutex_unlock(&sim->sim_lock);
-	i = 0;
-	while (i < count)
-	{
-		pthread_mutex_lock(&don[i].lock);
-		pthread_cond_broadcast(&don[i].cond);
-		pthread_mutex_unlock(&don[i].lock);
-		i++;
-	}
-}
-
-void	*monitor_routine(void *arg)
-{
-	monitor_t	*mon;
-	long long	now;
-	long long	last;
-	int i;
-
-	mon = (monitor_t*)arg;
-	while (1)
-	{
-		// printf("%llu: Monitor is cheking\n", get_current_time() - mon->simul->start);
-		pthread_mutex_lock(&mon->simul->sim_lock);
-		if (mon->simul->finished_coders == mon->config->number_of_coders)
-		{
-			mon->simul->is_finished = 1;
-			pthread_mutex_unlock(&mon->simul->sim_lock);
-			wake_up_all(mon->config->number_of_coders, mon->dongles, mon->simul);
-			// printf("Finished = all\n");
-			return (NULL);
-		}
-		pthread_mutex_unlock(&mon->simul->sim_lock);
-		i = 0;
-		while (i < mon->config->number_of_coders)
-		{
-			now = get_current_time();
-			pthread_mutex_lock(&mon->coders[i].coder_lock);
-			last = mon->coders[i].last_compile_time;
-			pthread_mutex_unlock(&mon->coders[i].coder_lock);
-			if (now - last > mon->config->time_to_burnout)
-			{
-				pthread_mutex_lock(&mon->simul->sim_lock);
-				mon->simul->is_finished = 1;
-				pthread_mutex_unlock(&mon->simul->sim_lock);
-				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
-				wake_up_all(mon->config->number_of_coders, mon->dongles, mon->simul);
-				return (NULL);
-			}
-			i++;
-		}
-		usleep(1000);
-	}
-	return (NULL);
-}
-
-int is_simul_finished(simul_t *sim)
-{
-	int is_finished;
-
-	pthread_mutex_lock(&sim->sim_lock);
-	is_finished = sim->is_finished;
-	pthread_mutex_unlock(&sim->sim_lock);
-	return is_finished;
-}
 
 int work(coder_t *coder, long long end_time, struct timespec *ts)
 {
@@ -259,7 +188,7 @@ int	acquire_dongles(coder_t *coder)
 	return (1);
 }
 
-void *coders_routine(void *arg)
+void *coder_routine(void *arg)
 {
 	coder_t *coder;
 	req_t request;
@@ -267,9 +196,6 @@ void *coders_routine(void *arg)
 	coder = (coder_t *)arg;
 	if (coder->left_dng == coder->right_dng)
 			return (NULL);
-	pthread_mutex_lock(&coder->coder_lock);
-	coder->last_compile_time = get_current_time();
-	pthread_mutex_unlock(&coder->coder_lock);
 	while (1)
 	{
 		request.coder_id = coder->id;
@@ -284,35 +210,16 @@ void *coders_routine(void *arg)
 	return (NULL);
 }
 
-void start_to_work(t_config *config, simul_t *simul)
+int	launch_coders(coder_t *coders, int count)
 {
-	dongle_t *dongles;
-	coder_t *coders;
-	shared_arg_t shared_arg;
-	monitor_t *mon;
-	int i;
+	int	i;
 
-	dongles = init_dongles(config->number_of_coders, config->dongle_cooldown, config->scheduler);
-	shared_arg.conf = config;
-	shared_arg.dngls = dongles;
-	shared_arg.sim = simul;
-	coders = init_coders(shared_arg);
-	mon = init_monitor(config, simul, coders, dongles);
 	i = 0;
-	while (i < config->number_of_coders)
+	while (i < count)
 	{
-		pthread_create(&coders[i].thread_id, NULL, coders_routine, &coders[i]);
+		if (pthread_create(&coders[i].thread_id, NULL, coder_routine, &coders[i]))
+			return (0);
 		i++;
 	}
-	pthread_create(&mon->thread_id, NULL, monitor_routine, mon);
-	pthread_join(mon->thread_id, NULL);
-	i = 0;
-	while (i < config->number_of_coders)
-	{
-		pthread_join(coders[i].thread_id, NULL);
-		i++;
-	}
-	destroy_coders(coders, config->number_of_coders);
-	destroy_dongles(dongles, config->number_of_coders);
-	free(mon);
+	return (1);
 }

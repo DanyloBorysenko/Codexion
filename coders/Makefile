@@ -5,9 +5,10 @@ RM = rm -f
 HEADER = codexion.h
 MY_SRC = arg_parser.c    \
          main.c          \
-		 work.c          \
+		 start.c         \
 		 logger.c        \
 		 coders.c        \
+		 coders_logic.c  \
 		 dongles.c       \
 		 heap.c          \
 		 simulation.c    \

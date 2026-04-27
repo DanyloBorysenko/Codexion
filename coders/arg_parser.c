@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:38:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 18:09:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/27 15:16:30 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,12 +70,12 @@ void	parse_arg(int argc, char **argv, char **sched_vals, t_config *conf)
 	}
 	if (!is_sched_val_correct(argv[ARG_COUNT - 1], sched_vals))
 		terminate_program("Not correct scheduler");
-	conf->number_of_coders = strict_atoi(argv[ARGV_CODERS]);
+	conf->num_of_cod = strict_atoi(argv[ARGV_CODERS]);
     conf->time_to_burnout = strict_atoi(argv[ARGV_BURNOUT]);
     conf->time_to_compile = strict_atoi(argv[ARGV_COMPILE]);
     conf->time_to_debug = strict_atoi(argv[ARGV_DEBUG]);
     conf->time_to_refactor = strict_atoi(argv[ARGV_REFACTOR]);
-    conf->number_of_compiles_required = strict_atoi(argv[ARGV_COMP_REQ]);
+    conf->num_of_comp_req = strict_atoi(argv[ARGV_COMP_REQ]);
     conf->dongle_cooldown = strict_atoi(argv[ARGV_COOLDOWN]);
     conf->scheduler = argv[ARGV_SCHED];
 }

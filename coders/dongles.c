@@ -6,49 +6,69 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/25 19:41:42 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/27 15:16:16 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-dongle_t    *init_dongles(int coders_count, int cooldown, char *sched)
+void	destroy_dongles(dongle_t *dongles, int count)
 {
-    dongle_t    *dongles;
-    int         i;
+	int	i;
 
-    dongles = malloc(sizeof(dongle_t) * coders_count);
-    if (!dongles)
-        return (NULL);
-
-    for (i = 0; i < coders_count; i++)
-    {
-        dongles[i].heap = NULL;
-        pthread_mutex_init(&dongles[i].lock, NULL);
-        pthread_cond_init(&dongles[i].cond, NULL);
-        dongles[i].num = i + 1;
-        dongles[i].in_use = 0;
-        dongles[i].release = 0;
-		dongles[i].cooldown = cooldown;
-        dongles[i].heap = init_heap(HEAP_SIZE, sched);
-        if (!dongles[i].heap)
-        {
-            destroy_dongles(dongles, i + 1);
-            return (NULL);
-        }
-    }
-    return (dongles);
+	if (!dongles)
+		return ;
+	i = 0;
+	while (i < count)
+	{
+		destroy_heap(dongles[i].heap);
+		pthread_mutex_destroy(&dongles[i].lock);
+		pthread_cond_destroy(&dongles[i].cond);
+		i++;
+	}
+	free(dongles);
 }
 
-void destroy_dongles(dongle_t *dongles, int count)
+static int	init_dongle(dongle_t *d, int i, t_config *conf)
 {
-    if (!dongles)
-        return;
-    for (int i = 0; i < count; i++)
-    {
-		destroy_heap(dongles[i].heap);
-        pthread_mutex_destroy(&dongles[i].lock);
-        pthread_cond_destroy(&dongles[i].cond);
-    }
-    free(dongles);
+	if (pthread_mutex_init(&d->lock, NULL) != 0)
+		return (0);
+	if (pthread_cond_init(&d->cond, NULL) != 0)
+	{
+		pthread_mutex_destroy(&d->lock);
+		return (0);
+	}
+	d->num = i + 1;
+	d->in_use = 0;
+	d->release = 0;
+	d->cooldown = conf->dongle_cooldown;
+	d->heap = init_heap(HEAP_SIZE, conf->scheduler);
+	if (!d->heap)
+	{
+		pthread_mutex_destroy(&d->lock);
+		pthread_cond_destroy(&d->cond);
+		return (0);
+	}
+	return (1);
+}
+
+dongle_t	*init_dongles(t_config *conf)
+{
+	dongle_t	*dongles;
+	int			i;
+
+	dongles = malloc(sizeof(dongle_t) * conf->num_of_cod);
+	if (!dongles)
+		return (NULL);
+	i = 0;
+	while (i < conf->num_of_cod)
+	{
+		if (!init_dongle(&dongles[i], i, conf))
+		{
+			destroy_dongles(dongles, i);
+			return (NULL);
+		}
+		i++;
+	}
+	return (dongles);
 }

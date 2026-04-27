@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 18:10:09 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/27 15:40:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,12 @@
 
 typedef struct s_config
 {
-	int		number_of_coders;
+	int		num_of_cod;
 	int		time_to_burnout;
 	int		time_to_compile;
 	int		time_to_debug;
 	int		time_to_refactor;
-	int		number_of_compiles_required;
+	int		num_of_comp_req;
 	int		dongle_cooldown;
 	char	*scheduler;
 }				t_config;
@@ -106,37 +106,35 @@ typedef struct coder_s
 typedef struct monitor_s
 {
 	pthread_t	thread_id;
-	t_config	*config;
+	int			coders_count;
 	coder_t		*coders;
 	dongle_t	*dongles;
 	simul_t		*simul;
-	int			finished;
-	int			burned_out;
-	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
 } 				monitor_t;
 
-typedef struct shared_arg_s
+typedef struct s_components
 {
-	t_config	*conf;
 	simul_t		*sim;
-	dongle_t	*dngls;
-}				shared_arg_t;
+	dongle_t	*dongles;
+	coder_t		*coders;
+	monitor_t	*mon;
+}	t_components;
 
 void			parse_arg(int argc, char **argv, char **sched_vals, t_config *conf);
-void 			start_to_work(t_config *cfg, simul_t *simul);
+void 			start_simul(t_config *cfg);
 simul_t			*init_simul(void);
 void			destroy_simul(simul_t *sim);
+int				is_simul_finished(simul_t *sim);
 void			log_event(simul_t	*sim, int id, char *msg, long long time);
 monitor_t		*init_monitor(
-	t_config *config,
+	int coders_count,
 	simul_t *simul,
 	coder_t *coders,
 	dongle_t *dongles);
-// void destroy_monitor(monitor_t *mon);
-coder_t			*init_coders(shared_arg_t init_arg);
+coder_t			*init_coders(t_config *conf, simul_t *sim, dongle_t *don);
 void			destroy_coders(coder_t *coders, int count);
-dongle_t    	*init_dongles(int coders_count, int cooldown, char *sched);
+int				launch_coders(coder_t *coders, int count);
+dongle_t		*init_dongles(t_config *conf);
 void 			destroy_dongles(dongle_t *dongles, int coders_count);
 heap_t			*init_heap(int count, char *sched);
 void			heap_insert(heap_t *heap, req_t req);
@@ -144,5 +142,7 @@ req_t			heap_extract(heap_t *heap, int index);
 void 			destroy_heap(heap_t *heap);
 long long 		get_current_time(void);
 struct 			timespec get_abs_time(long long wake_up_time);
+
+void			*mon_routine(void *arg);
 
 #endif

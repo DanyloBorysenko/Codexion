@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 12:56:26 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 14:08:03 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/27 10:37:06 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,4 +38,14 @@ void	destroy_simul(simul_t *sim)
 	pthread_mutex_destroy(&sim->print_lock);
 	pthread_cond_destroy(&sim->cond);
 	free(sim);
+}
+
+int	is_simul_finished(simul_t *sim)
+{
+	int	is_finished;
+
+	pthread_mutex_lock(&sim->sim_lock);
+	is_finished = sim->is_finished;
+	pthread_mutex_unlock(&sim->sim_lock);
+	return (is_finished);
 }
