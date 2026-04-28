@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 15:16:30 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 16:09:16 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,6 @@ static int	init_coder(coder_t *cod, dongle_t *don, t_config *conf, simul_t *s)
 	cod->simul = s;
 	if (pthread_mutex_init(&cod->coder_lock, NULL) != 0)
 		return (0);
-	if (pthread_cond_init(&cod->cond, NULL) != 0)
-	{
-		pthread_mutex_destroy(&cod->coder_lock);
-		return (0);
-	}
 	return (1);
 }
 
@@ -69,7 +64,6 @@ void	destroy_coders(coder_t *coders, int count)
 	while (i < count)
 	{
 		pthread_mutex_destroy(&coders[i].coder_lock);
-		pthread_cond_destroy(&coders[i].cond);
 		i++;
 	}
 	free(coders);

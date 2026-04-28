@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 15:55:49 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 16:24:11 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ static void	wait_for_dongle(coder_t *coder, dongle_t *don)
 {
 	struct timespec	ts;
 
-	while (!is_simul_finished(coder->simul))
+	while (!coder->simul->is_finished)
 	{
 		if (don->heap->size == 0)
 		{
