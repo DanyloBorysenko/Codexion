@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 14:49:28 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 15:54:32 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,7 @@ heap_t			*init_heap(int count, char *sched);
 void			heap_insert(heap_t *heap, req_t req);
 req_t			heap_extract(heap_t *heap, int index);
 void 			destroy_heap(heap_t *heap);
-long long 		get_current_time(void);
+long long 		get_cur_time(void);
 struct 			timespec get_abs_time(long long wake_up_time);
 
 void			*mon_rout(void *arg);

@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/18 00:05:33 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 12:25:01 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 15:54:32 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-long long	get_current_time(void)
+long long	get_cur_time(void)
 {
 	struct timeval	t;
 	long long		curr_time;

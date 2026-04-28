@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 13:45:47 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 15:54:32 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ static int	is_burn_out(int count, coder_t *cods, simul_t *s, dongle_t *d)
 	i = 0;
 	while (i < count)
 	{
-		now = get_current_time();
+		now = get_cur_time();
 		pthread_mutex_lock(&cods[i].coder_lock);
 		last = cods[i].last_compile_time;
 		pthread_mutex_unlock(&cods[i].coder_lock);
