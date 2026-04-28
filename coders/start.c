@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 14:49:28 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,20 @@ static void	destroy_components(t_components *comp, int coders_count)
 	free(comp->mon);
 	destroy_dongles(comp->dongles, coders_count);
 	destroy_simul(comp->sim);
+}
+
+int	launch_coders(coder_t *coders, int count)
+{
+	int	i;
+
+	i = 0;
+	while (i < count)
+	{
+		if (pthread_create(&coders[i].thread_id, NULL, coder_rout, &coders[i]))
+			return (i);
+		i++;
+	}
+	return (count);
 }
 
 void	start_simul(t_config *config)

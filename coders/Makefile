@@ -9,6 +9,7 @@ MY_SRC = arg_parser.c    \
 		 logger.c        \
 		 coders.c        \
 		 coders_logic.c  \
+		 coders_work.c   \
 		 dongles.c       \
 		 heap.c          \
 		 simulation.c    \
