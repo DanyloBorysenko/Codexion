@@ -6,17 +6,18 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 15:33:38 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-static void	wake_up_all(int count, dongle_t *don, simul_t *sim)
+void	wake_up_all(int count, dongle_t *don, simul_t *sim)
 {
 	int	i;
 
 	pthread_mutex_lock(&sim->sim_lock);
+	sim->is_finished = 1;
 	pthread_cond_broadcast(&sim->cond);
 	pthread_mutex_unlock(&sim->sim_lock);
 	i = 0;
@@ -29,7 +30,7 @@ static void	wake_up_all(int count, dongle_t *don, simul_t *sim)
 	}
 }
 
-void	*mon_routine(void *arg)
+void	*mon_rout(void *arg)
 {
 	monitor_t	*mon;
 	long long	now;

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 15:40:02 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,7 @@ monitor_t		*init_monitor(
 	simul_t *simul,
 	coder_t *coders,
 	dongle_t *dongles);
+void			wake_up_all(int count, dongle_t *don, simul_t *sim);
 coder_t			*init_coders(t_config *conf, simul_t *sim, dongle_t *don);
 void			destroy_coders(coder_t *coders, int count);
 int				launch_coders(coder_t *coders, int count);
@@ -143,6 +144,6 @@ void 			destroy_heap(heap_t *heap);
 long long 		get_current_time(void);
 struct 			timespec get_abs_time(long long wake_up_time);
 
-void			*mon_routine(void *arg);
+void			*mon_rout(void *arg);
 
 #endif

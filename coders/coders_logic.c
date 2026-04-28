@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 18:12:54 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 10:50:49 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,8 +211,8 @@ int	launch_coders(coder_t *coders, int count)
 	while (i < count)
 	{
 		if (pthread_create(&coders[i].thread_id, NULL, coder_routine, &coders[i]))
-			return (0);
+			return (i);
 		i++;
 	}
-	return (1);
+	return (count);
 }

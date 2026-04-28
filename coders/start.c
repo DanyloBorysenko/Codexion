@@ -6,24 +6,11 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 16:21:14 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-static void	join_threads(monitor_t *mon, coder_t *coders, int count)
-{
-	int	i;
-
-	pthread_join(mon->thread_id, NULL);
-	i = 0;
-	while (i < count)
-	{
-		pthread_join(coders[i].thread_id, NULL);
-		i++;
-	}
-}
 
 static int	init_components(t_config *config, t_components *c)
 {
@@ -51,15 +38,23 @@ static void	destroy_components(t_components *comp, int coders_count)
 void	start_simul(t_config *config)
 {
 	t_components	c;
-	int				success;
+	int				mon_ok;
+	int				launched_coders;
 
 	memset(&c, 0, sizeof(t_components));
-	success = init_components(config, &c);
-	if (success)
-		success = launch_coders(c.coders, config->num_of_cod);
-	if (success)
-		success = !pthread_create(&c.mon->thread_id, NULL, mon_routine, c.mon);
-	if (success)
-		join_threads(c.mon, c.coders, config->num_of_cod);
+	mon_ok = 0;
+	launched_coders = 0;
+	if (init_components(config, &c))
+	{
+		launched_coders = launch_coders(c.coders, config->num_of_cod);
+		if (launched_coders > 0)
+			mon_ok = !pthread_create(&c.mon->thread_id, NULL, mon_rout, c.mon);
+	}
+	if (launched_coders > 0 && !mon_ok)
+		wake_up_all(config->num_of_cod, c.dongles, c.sim);
+	if (mon_ok)
+		pthread_join(c.mon->thread_id, NULL);
+	while (launched_coders > 0)
+		pthread_join(c.coders[--launched_coders].thread_id, NULL);
 	destroy_components(&c, config->num_of_cod);
 }
