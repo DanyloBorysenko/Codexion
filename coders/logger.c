@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 15:55:19 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/26 12:27:00 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 12:23:19 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void log_event(simul_t	*sim, int id, char *msg, long long time)
+void	log_event(simul_t	*sim, int id, char *msg, long long time)
 {
 	int	is_finished;
 

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 13:45:15 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ typedef struct coder_s
 typedef struct monitor_s
 {
 	pthread_t	thread_id;
-	int			coders_count;
+	int			cod_count;
 	coder_t		*coders;
 	dongle_t	*dongles;
 	simul_t		*simul;

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 12:21:43 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/28 13:45:47 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,45 +30,50 @@ void	wake_up_all(int count, dongle_t *don, simul_t *sim)
 	}
 }
 
+static int	is_burn_out(int count, coder_t *cods, simul_t *s, dongle_t *d)
+{
+	int			i;
+	long long	now;
+	long long	last;
+
+	i = 0;
+	while (i < count)
+	{
+		now = get_current_time();
+		pthread_mutex_lock(&cods[i].coder_lock);
+		last = cods[i].last_compile_time;
+		pthread_mutex_unlock(&cods[i].coder_lock);
+		if (now - last > cods[i].time_to_burnout)
+		{
+			wake_up_all(count, d, s);
+			log_event(s, cods[i].id, "burned out", now);
+			return (1);
+		}
+		i++;
+	}
+	return (0);
+}
+
 void	*mon_rout(void *arg)
 {
 	monitor_t	*mon;
-	long long	now;
-	long long	last;
-	int i;
+	int			finished;
 
-	mon = (monitor_t*)arg;
+	mon = (monitor_t *)arg;
+	finished = 0;
 	while (1)
 	{
-		// printf("%llu: Monitor is cheking\n", get_current_time() - mon->simul->start);
 		pthread_mutex_lock(&mon->simul->sim_lock);
-		if (mon->simul->finished_coders == mon->coders_count)
+		finished = mon->simul->finished_coders;
+		pthread_mutex_unlock(&mon->simul->sim_lock);
+		if (finished == mon->cod_count)
 		{
-			mon->simul->is_finished = 1;
-			pthread_mutex_unlock(&mon->simul->sim_lock);
-			wake_up_all(mon->coders_count, mon->dongles, mon->simul);
+			wake_up_all(mon->cod_count, mon->dongles, mon->simul);
 			printf("Finished = all\n");
 			return (NULL);
 		}
-		pthread_mutex_unlock(&mon->simul->sim_lock);
-		i = 0;
-		while (i < mon->coders_count)
-		{
-			now = get_current_time();
-			pthread_mutex_lock(&mon->coders[i].coder_lock);
-			last = mon->coders[i].last_compile_time;
-			pthread_mutex_unlock(&mon->coders[i].coder_lock);
-			if (now - last > mon->coders[i].time_to_burnout)
-			{
-				pthread_mutex_lock(&mon->simul->sim_lock);
-				mon->simul->is_finished = 1;
-				pthread_mutex_unlock(&mon->simul->sim_lock);
-				log_event(mon->simul, (mon->coders)[i].id, "burned out", now);
-				wake_up_all(mon->coders_count, mon->dongles, mon->simul);
-				return (NULL);
-			}
-			i++;
-		}
+		if (is_burn_out(mon->cod_count, mon->coders, mon->simul, mon->dongles))
+			return (NULL);
 		usleep(1000);
 	}
 	return (NULL);
@@ -85,7 +90,7 @@ monitor_t	*init_monitor(
 	mon = malloc(sizeof(monitor_t));
 	if (!mon)
 		return (NULL);
-	mon->coders_count = coders_count;
+	mon->cod_count = coders_count;
 	mon->coders = coders;
 	mon->simul = simul;
 	mon->dongles = dongles;
