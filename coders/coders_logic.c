@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 16:24:11 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 21:39:28 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,43 +43,51 @@ static void	insert_req(req_t req, dongle_t *first, dongle_t *sec)
 	pthread_mutex_unlock(&first->lock);
 }
 
-static void	wait_for_dongle(coder_t *coder, dongle_t *don)
+int	take_dongles(dongle_t *d1, dongle_t *d2, coder_t *coder)
 {
-	struct timespec	ts;
+	long long	max_release;
+	struct timespec	wake_up;
 
 	while (!coder->simul->is_finished)
 	{
-		if (don->heap->size == 0)
+		pthread_mutex_lock(&d1->lock);
+		pthread_mutex_lock(&d2->lock);
+		if (d1->heap->reqs[0].coder_id == coder->id &&
+			d2->heap->reqs[0].coder_id == coder->id &&
+			!d1->in_use && !d2->in_use &&
+			get_cur_time() > d1->release && get_cur_time() > d2->release)
 		{
-			pthread_cond_wait(&don->cond, &don->lock);
-			continue ;
+			d1->in_use = 1;
+			d2->in_use = 1;
+			pthread_mutex_unlock(&d2->lock);
+			pthread_mutex_unlock(&d1->lock);
+			return (1);
 		}
-		if (don->heap->reqs[0].coder_id == coder->id
-			&& !don->in_use && get_cur_time() >= don->release)
-			break ;
-		if (don->heap->reqs[0].coder_id == coder->id && !don->in_use)
+		if (d1->heap->reqs[0].coder_id == coder->id &&
+			d2->heap->reqs[0].coder_id == coder->id &&
+			!d1->in_use && !d2->in_use)
 		{
-			ts = get_abs_time(don->release);
-			pthread_cond_timedwait(&don->cond, &don->lock, &ts);
+			if (d1->release > d2->release)
+				max_release = d1->release;
+			else
+				max_release = d2->release;
+			wake_up = get_abs_time(max_release);
+			pthread_mutex_lock(&coder->lock);
+			pthread_mutex_unlock(&d2->lock);
+			pthread_mutex_unlock(&d1->lock);
+			pthread_cond_timedwait(&coder->cond, &coder->lock, &wake_up);
+			pthread_mutex_unlock(&coder->lock);
 		}
 		else
-			pthread_cond_wait(&don->cond, &don->lock);
+		{
+			pthread_mutex_lock(&coder->lock);
+			pthread_mutex_unlock(&d2->lock);
+			pthread_mutex_unlock(&d1->lock);
+			pthread_cond_wait(&coder->cond, &coder->lock);
+			pthread_mutex_unlock(&coder->lock);
+		}
 	}
-}
-
-static int	take_dongle(coder_t *coder, dongle_t *don)
-{
-	pthread_mutex_lock(&don->lock);
-	wait_for_dongle(coder, don);
-	if (is_simul_finished(coder->simul))
-	{
-		pthread_mutex_unlock(&don->lock);
-		return (0);
-	}
-	don->in_use = 1;
-	log_event(coder->simul, coder->id, "has taken a dongle", get_cur_time());
-	pthread_mutex_unlock(&don->lock);
-	return (1);
+	return (0);
 }
 
 void	*coder_rout(void *arg)
@@ -98,11 +106,10 @@ void	*coder_rout(void *arg)
 		request.coder_id = coder->id;
 		request.arr_time = get_cur_time();
 		request.deadline = coder->last_compile_time + coder->time_to_burnout;
+		request.coder = coder;
 		insert_req(request, first, second);
-		if (!take_dongle(coder, first))
-			break ;
-		if (!take_dongle(coder, second))
-			break ;
+		if (!take_dongles(first, second, coder))
+			break;
 		if (!compile(coder) || !debug(coder) || !refact(coder))
 			break ;
 	}

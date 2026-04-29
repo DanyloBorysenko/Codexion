@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/28 14:21:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 15:54:32 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 19:02:14 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,13 +65,23 @@ void	release_dongles(dongle_t *left, dongle_t *right)
 	left->in_use = 0;
 	left->release = get_cur_time() + left->cooldown;
 	heap_extract(left->heap, 0);
-	pthread_cond_broadcast(&left->cond);
+	if (left->heap->size)
+	{
+		pthread_mutex_lock(&left->heap->reqs[0].coder->lock);
+		pthread_cond_signal(&left->heap->reqs[0].coder->cond);
+		pthread_mutex_unlock(&left->heap->reqs[0].coder->lock);
+	}
 	pthread_mutex_unlock(&left->lock);
 	pthread_mutex_lock(&right->lock);
 	right->in_use = 0;
 	right->release = get_cur_time() + right->cooldown;
 	heap_extract(right->heap, 0);
-	pthread_cond_broadcast(&right->cond);
+	if (right->heap->size)
+	{
+		pthread_mutex_lock(&right->heap->reqs[0].coder->lock);
+		pthread_cond_signal(&right->heap->reqs[0].coder->cond);
+		pthread_mutex_unlock(&right->heap->reqs[0].coder->lock);
+	}
 	pthread_mutex_unlock(&right->lock);
 }
 
@@ -84,9 +94,9 @@ int compile(coder_t *coder)
 	current_time = get_cur_time();
 	end_time = current_time + coder->time_to_compile;
 	ts = get_abs_time(end_time);
-	pthread_mutex_lock(&coder->coder_lock);
+	pthread_mutex_lock(&coder->lock);
 	coder->last_compile_time = current_time;
-	pthread_mutex_unlock(&coder->coder_lock);
+	pthread_mutex_unlock(&coder->lock);
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	if (!work(coder, end_time, &ts))
 		return (0);

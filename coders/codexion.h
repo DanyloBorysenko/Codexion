@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 16:08:22 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 21:19:37 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@
 #define ARGV_COOLDOWN 7
 #define ARGV_SCHED 8
 
+typedef struct dongle_s dongle_t;
+
 typedef struct s_config
 {
 	int		num_of_cod;
@@ -59,9 +61,28 @@ typedef struct simul_s
 	pthread_cond_t	cond;
 }				simul_t;
 
+typedef struct coder_s
+{
+	int				id;
+	pthread_t		thread_id;
+	dongle_t		*left_dng;
+	dongle_t		*right_dng;
+	int				time_to_burnout;
+	int				time_to_compile;
+	int				time_to_debug;
+	int				time_to_refactor;
+	int				num_of_comp_req;
+	int				compiles_done;
+	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
+	long long		last_compile_time;
+	simul_t			*simul;
+}				coder_t;
+
 typedef struct req_s
 {
 	int			coder_id;
+	coder_t		*coder;
 	long long 	arr_time;
 	long long 	deadline;
 }				req_t;
@@ -81,33 +102,14 @@ typedef struct dongle_s
 	long long		release;
 	int				cooldown;
 	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
 	heap_t			*heap;
 }				dongle_t;
-
-typedef struct coder_s
-{
-	int				id;
-	pthread_t		thread_id;
-	dongle_t		*left_dng;
-	dongle_t		*right_dng;
-	int				time_to_burnout;
-	int				time_to_compile;
-	int				time_to_debug;
-	int				time_to_refactor;
-	int				num_of_comp_req;
-	int				compiles_done;
-	pthread_mutex_t	coder_lock;
-	long long		last_compile_time;
-	simul_t			*simul;
-}				coder_t;
 
 typedef struct monitor_s
 {
 	pthread_t	thread_id;
 	int			cod_count;
 	coder_t		*coders;
-	dongle_t	*dongles;
 	simul_t		*simul;
 } 				monitor_t;
 
@@ -128,9 +130,8 @@ void			log_event(simul_t	*sim, int id, char *msg, long long time);
 monitor_t		*init_monitor(
 	int coders_count,
 	simul_t *simul,
-	coder_t *coders,
-	dongle_t *dongles);
-void			wake_up_all(int count, dongle_t *don, simul_t *sim);
+	coder_t *coders);
+void			wake_up_all(int count, coder_t *cod, simul_t *sim);
 coder_t			*init_coders(t_config *conf, simul_t *sim, dongle_t *don);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(t_config *conf);

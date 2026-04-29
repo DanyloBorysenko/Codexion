@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 15:05:56 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 18:10:29 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static int	init_components(t_config *config, t_components *c)
 	c->coders = init_coders(config, c->sim, c->dongles);
 	if (!c->coders)
 		return (0);
-	c->mon = init_monitor(config->num_of_cod, c->sim, c->coders, c->dongles);
+	c->mon = init_monitor(config->num_of_cod, c->sim, c->coders);
 	if (!c->mon)
 		return (0);
 	return (1);
@@ -65,7 +65,7 @@ void	start_simul(t_config *config)
 			mon_ok = !pthread_create(&c.mon->thread_id, NULL, mon_rout, c.mon);
 	}
 	if (launched_coders > 0 && !mon_ok)
-		wake_up_all(config->num_of_cod, c.dongles, c.sim);
+		wake_up_all(config->num_of_cod, c.coders, c.sim);
 	if (mon_ok)
 		pthread_join(c.mon->thread_id, NULL);
 	while (launched_coders > 0)

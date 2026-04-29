@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/28 15:54:32 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 18:08:55 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	wake_up_all(int count, dongle_t *don, simul_t *sim)
+void	wake_up_all(int count, coder_t *cod, simul_t *sim)
 {
 	int	i;
 
@@ -23,14 +23,14 @@ void	wake_up_all(int count, dongle_t *don, simul_t *sim)
 	i = 0;
 	while (i < count)
 	{
-		pthread_mutex_lock(&don[i].lock);
-		pthread_cond_broadcast(&don[i].cond);
-		pthread_mutex_unlock(&don[i].lock);
+		pthread_mutex_lock(&cod[i].lock);
+		pthread_cond_signal(&cod[i].cond);
+		pthread_mutex_unlock(&cod[i].lock);
 		i++;
 	}
 }
 
-static int	is_burn_out(int count, coder_t *cods, simul_t *s, dongle_t *d)
+static int	is_burn_out(int count, coder_t *cods, simul_t *s)
 {
 	int			i;
 	long long	now;
@@ -40,12 +40,12 @@ static int	is_burn_out(int count, coder_t *cods, simul_t *s, dongle_t *d)
 	while (i < count)
 	{
 		now = get_cur_time();
-		pthread_mutex_lock(&cods[i].coder_lock);
+		pthread_mutex_lock(&cods[i].lock);
 		last = cods[i].last_compile_time;
-		pthread_mutex_unlock(&cods[i].coder_lock);
+		pthread_mutex_unlock(&cods[i].lock);
 		if (now - last > cods[i].time_to_burnout)
 		{
-			wake_up_all(count, d, s);
+			wake_up_all(count, cods, s);
 			log_event(s, cods[i].id, "burned out", now);
 			return (1);
 		}
@@ -68,11 +68,11 @@ void	*mon_rout(void *arg)
 		pthread_mutex_unlock(&mon->simul->sim_lock);
 		if (finished == mon->cod_count)
 		{
-			wake_up_all(mon->cod_count, mon->dongles, mon->simul);
+			wake_up_all(mon->cod_count, mon->coders, mon->simul);
 			printf("Finished = all\n");
 			return (NULL);
 		}
-		if (is_burn_out(mon->cod_count, mon->coders, mon->simul, mon->dongles))
+		if (is_burn_out(mon->cod_count, mon->coders, mon->simul))
 			return (NULL);
 		usleep(1000);
 	}
@@ -82,8 +82,7 @@ void	*mon_rout(void *arg)
 monitor_t	*init_monitor(
 	int coders_count,
 	simul_t *simul,
-	coder_t *coders,
-	dongle_t *dongles)
+	coder_t *coders)
 {
 	monitor_t	*mon;
 
@@ -93,6 +92,5 @@ monitor_t	*init_monitor(
 	mon->cod_count = coders_count;
 	mon->coders = coders;
 	mon->simul = simul;
-	mon->dongles = dongles;
 	return (mon);
 }

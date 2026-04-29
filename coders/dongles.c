@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 15:16:16 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/29 18:56:46 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ void	destroy_dongles(dongle_t *dongles, int count)
 	{
 		destroy_heap(dongles[i].heap);
 		pthread_mutex_destroy(&dongles[i].lock);
-		pthread_cond_destroy(&dongles[i].cond);
 		i++;
 	}
 	free(dongles);
@@ -33,11 +32,6 @@ static int	init_dongle(dongle_t *d, int i, t_config *conf)
 {
 	if (pthread_mutex_init(&d->lock, NULL) != 0)
 		return (0);
-	if (pthread_cond_init(&d->cond, NULL) != 0)
-	{
-		pthread_mutex_destroy(&d->lock);
-		return (0);
-	}
 	d->num = i + 1;
 	d->in_use = 0;
 	d->release = 0;
@@ -46,7 +40,6 @@ static int	init_dongle(dongle_t *d, int i, t_config *conf)
 	if (!d->heap)
 	{
 		pthread_mutex_destroy(&d->lock);
-		pthread_cond_destroy(&d->cond);
 		return (0);
 	}
 	return (1);
