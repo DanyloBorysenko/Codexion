@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 21:19:37 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/30 15:17:40 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ typedef struct simul_s
 	long long		start;
 	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	print_lock;
+	pthread_mutex_t sched_lock;
+	pthread_cond_t  sched_cond;
 	pthread_cond_t	cond;
 }				simul_t;
 
