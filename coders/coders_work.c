@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/28 14:21:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 19:02:14 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/30 15:26:39 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,30 +59,21 @@ int debug(coder_t *coder)
 	return (work(coder, end_time, &ts));
 }
 
-void	release_dongles(dongle_t *left, dongle_t *right)
+void	release_dongles(dongle_t *left, dongle_t *right, simul_t *sim)
 {
+	pthread_mutex_lock(&sim->sched_lock);
 	pthread_mutex_lock(&left->lock);
 	left->in_use = 0;
 	left->release = get_cur_time() + left->cooldown;
 	heap_extract(left->heap, 0);
-	if (left->heap->size)
-	{
-		pthread_mutex_lock(&left->heap->reqs[0].coder->lock);
-		pthread_cond_signal(&left->heap->reqs[0].coder->cond);
-		pthread_mutex_unlock(&left->heap->reqs[0].coder->lock);
-	}
 	pthread_mutex_unlock(&left->lock);
 	pthread_mutex_lock(&right->lock);
 	right->in_use = 0;
 	right->release = get_cur_time() + right->cooldown;
 	heap_extract(right->heap, 0);
-	if (right->heap->size)
-	{
-		pthread_mutex_lock(&right->heap->reqs[0].coder->lock);
-		pthread_cond_signal(&right->heap->reqs[0].coder->cond);
-		pthread_mutex_unlock(&right->heap->reqs[0].coder->lock);
-	}
 	pthread_mutex_unlock(&right->lock);
+	pthread_cond_broadcast(&sim->sched_cond);
+	pthread_mutex_unlock(&sim->sched_lock);
 }
 
 int compile(coder_t *coder)
@@ -100,7 +91,7 @@ int compile(coder_t *coder)
 	log_event(coder->simul, coder->id, "is compiling", current_time);
 	if (!work(coder, end_time, &ts))
 		return (0);
-	release_dongles(coder->left_dng, coder->right_dng);
+	release_dongles(coder->left_dng, coder->right_dng, coder->simul);
 	coder->compiles_done++;
 	if (coder->compiles_done == coder->num_of_comp_req)
 	{

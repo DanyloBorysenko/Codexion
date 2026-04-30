@@ -6,28 +6,21 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 18:08:55 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/30 15:48:22 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	wake_up_all(int count, coder_t *cod, simul_t *sim)
+void	wake_up_all(simul_t *sim)
 {
-	int	i;
-
 	pthread_mutex_lock(&sim->sim_lock);
 	sim->is_finished = 1;
 	pthread_cond_broadcast(&sim->cond);
 	pthread_mutex_unlock(&sim->sim_lock);
-	i = 0;
-	while (i < count)
-	{
-		pthread_mutex_lock(&cod[i].lock);
-		pthread_cond_signal(&cod[i].cond);
-		pthread_mutex_unlock(&cod[i].lock);
-		i++;
-	}
+	pthread_mutex_lock(&sim->sched_lock);
+	pthread_cond_broadcast(&sim->sched_cond);
+	pthread_mutex_unlock(&sim->sched_lock);
 }
 
 static int	is_burn_out(int count, coder_t *cods, simul_t *s)
@@ -45,7 +38,7 @@ static int	is_burn_out(int count, coder_t *cods, simul_t *s)
 		pthread_mutex_unlock(&cods[i].lock);
 		if (now - last > cods[i].time_to_burnout)
 		{
-			wake_up_all(count, cods, s);
+			wake_up_all(s);
 			log_event(s, cods[i].id, "burned out", now);
 			return (1);
 		}
@@ -68,7 +61,7 @@ void	*mon_rout(void *arg)
 		pthread_mutex_unlock(&mon->simul->sim_lock);
 		if (finished == mon->cod_count)
 		{
-			wake_up_all(mon->cod_count, mon->coders, mon->simul);
+			wake_up_all(mon->simul);
 			printf("Finished = all\n");
 			return (NULL);
 		}

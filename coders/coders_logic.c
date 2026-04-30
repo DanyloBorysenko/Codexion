@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 21:39:28 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/30 15:45:21 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ int	take_dongles(dongle_t *d1, dongle_t *d2, coder_t *coder)
 
 	while (!coder->simul->is_finished)
 	{
+		pthread_mutex_lock(&coder->simul->sched_lock);
 		pthread_mutex_lock(&d1->lock);
 		pthread_mutex_lock(&d2->lock);
 		if (d1->heap->reqs[0].coder_id == coder->id &&
@@ -61,6 +62,7 @@ int	take_dongles(dongle_t *d1, dongle_t *d2, coder_t *coder)
 			d2->in_use = 1;
 			pthread_mutex_unlock(&d2->lock);
 			pthread_mutex_unlock(&d1->lock);
+			pthread_mutex_unlock(&coder->simul->sched_lock);
 			return (1);
 		}
 		if (d1->heap->reqs[0].coder_id == coder->id &&
@@ -71,21 +73,18 @@ int	take_dongles(dongle_t *d1, dongle_t *d2, coder_t *coder)
 				max_release = d1->release;
 			else
 				max_release = d2->release;
-			wake_up = get_abs_time(max_release);
-			pthread_mutex_lock(&coder->lock);
 			pthread_mutex_unlock(&d2->lock);
 			pthread_mutex_unlock(&d1->lock);
-			pthread_cond_timedwait(&coder->cond, &coder->lock, &wake_up);
-			pthread_mutex_unlock(&coder->lock);
+			wake_up = get_abs_time(max_release);
+			pthread_cond_timedwait(&coder->simul->sched_cond, &coder->simul->sched_lock, &wake_up);
 		}
 		else
 		{
-			pthread_mutex_lock(&coder->lock);
 			pthread_mutex_unlock(&d2->lock);
 			pthread_mutex_unlock(&d1->lock);
-			pthread_cond_wait(&coder->cond, &coder->lock);
-			pthread_mutex_unlock(&coder->lock);
+			pthread_cond_wait(&coder->simul->sched_cond, &coder->simul->sched_lock);
 		}
+		pthread_mutex_unlock(&coder->simul->sched_lock);
 	}
 	return (0);
 }

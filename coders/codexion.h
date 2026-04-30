@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:17:40 by danborys         ###   ########.fr       */
+/*   Updated: 2026/04/30 15:53:00 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,6 @@ typedef struct coder_s
 	int				num_of_comp_req;
 	int				compiles_done;
 	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
 	long long		last_compile_time;
 	simul_t			*simul;
 }				coder_t;
@@ -133,7 +132,7 @@ monitor_t		*init_monitor(
 	int coders_count,
 	simul_t *simul,
 	coder_t *coders);
-void			wake_up_all(int count, coder_t *cod, simul_t *sim);
+void			wake_up_all(simul_t *sim);
 coder_t			*init_coders(t_config *conf, simul_t *sim, dongle_t *don);
 void			destroy_coders(coder_t *coders, int count);
 dongle_t		*init_dongles(t_config *conf);
