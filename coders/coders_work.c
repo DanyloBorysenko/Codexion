@@ -6,38 +6,38 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/28 14:21:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 12:39:22 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:25:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-int work(coder_t *coder, long long end_time, struct timespec *ts)
+int	work(t_coder *coder, long long end_time, struct timespec *ts)
 {
 	long long	current_time;
 
-	pthread_mutex_lock(&coder->simul->sim_lock);
+	pthread_mutex_lock(&coder->simul->lock);
 	while (!coder->simul->is_finished)
 	{
 		current_time = get_cur_time();
 		if (current_time >= end_time)
-			break;
-		pthread_cond_timedwait(&coder->simul->cond, &coder->simul->sim_lock, ts);
+			break ;
+		pthread_cond_timedwait(&coder->simul->cond, &coder->simul->lock, ts);
 	}
 	if (coder->simul->is_finished)
 	{
-		pthread_mutex_unlock(&coder->simul->sim_lock);
+		pthread_mutex_unlock(&coder->simul->lock);
 		return (0);
 	}
-	pthread_mutex_unlock(&coder->simul->sim_lock);
+	pthread_mutex_unlock(&coder->simul->lock);
 	return (1);
 }
 
-int refact(coder_t *coder)
+int	refact(t_coder *coder)
 {
-	struct timespec ts;
-	long long current_time;
-	long long end_time;
+	struct timespec	ts;
+	long long		current_time;
+	long long		end_time;
 
 	current_time = get_cur_time();
 	end_time = current_time + coder->time_to_refactor;
@@ -46,11 +46,11 @@ int refact(coder_t *coder)
 	return (work(coder, end_time, &ts));
 }
 
-int debug(coder_t *coder)
+int	debug(t_coder *coder)
 {
-	struct timespec ts;
-	long long current_time;
-	long long end_time;
+	struct timespec	ts;
+	long long		current_time;
+	long long		end_time;
 
 	current_time = get_cur_time();
 	end_time = current_time + coder->time_to_debug;
@@ -59,7 +59,7 @@ int debug(coder_t *coder)
 	return (work(coder, end_time, &ts));
 }
 
-void	release_dongles(dongle_t *left, dongle_t *right, simul_t *sim)
+void	release_dongles(t_dongle *left, t_dongle *right, t_simul *sim)
 {
 	pthread_mutex_lock(&sim->sched_lock);
 	pthread_mutex_lock(&left->lock);
@@ -74,11 +74,11 @@ void	release_dongles(dongle_t *left, dongle_t *right, simul_t *sim)
 	pthread_mutex_unlock(&sim->sched_lock);
 }
 
-int compile(coder_t *coder)
+int	compile(t_coder *coder)
 {
-	struct timespec ts;
-	long long current_time;
-	long long end_time;
+	struct timespec	ts;
+	long long		current_time;
+	long long		end_time;
 
 	current_time = get_cur_time();
 	end_time = current_time + coder->time_to_compile;
@@ -93,9 +93,9 @@ int compile(coder_t *coder)
 	coder->compiles_done++;
 	if (coder->compiles_done == coder->num_of_comp_req)
 	{
-		pthread_mutex_lock(&coder->simul->sim_lock);
+		pthread_mutex_lock(&coder->simul->lock);
 		coder->simul->finished_coders = coder->simul->finished_coders + 1;
-		pthread_mutex_unlock(&coder->simul->sim_lock);
+		pthread_mutex_unlock(&coder->simul->lock);
 	}
 	return (1);
 }

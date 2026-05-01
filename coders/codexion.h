@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 11:38:23 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:26:00 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,16 +28,16 @@
 
 # define HEAP_SIZE 2
 
-#define ARGV_CODERS 1
-#define ARGV_BURNOUT 2
-#define ARGV_COMPILE 3
-#define ARGV_DEBUG 4
-#define ARGV_REFACTOR 5
-#define ARGV_COMP_REQ 6
-#define ARGV_COOLDOWN 7
-#define ARGV_SCHED 8
+# define ARGV_CODERS 1
+# define ARGV_BURNOUT 2
+# define ARGV_COMPILE 3
+# define ARGV_DEBUG 4
+# define ARGV_REFACTOR 5
+# define ARGV_COMP_REQ 6
+# define ARGV_COOLDOWN 7
+# define ARGV_SCHED 8
 
-typedef struct dongle_s dongle_t;
+typedef struct s_dongle	t_dongle;
 
 typedef struct s_config
 {
@@ -51,24 +51,24 @@ typedef struct s_config
 	char	*scheduler;
 }				t_config;
 
-typedef struct simul_s
+typedef struct s_simul
 {
 	int				finished_coders;
 	int				is_finished;
 	long long		start;
-	pthread_mutex_t	sim_lock;
+	pthread_mutex_t	lock;
 	pthread_mutex_t	print_lock;
-	pthread_mutex_t sched_lock;
-	pthread_cond_t  sched_cond;
+	pthread_mutex_t	sched_lock;
+	pthread_cond_t	sched_cond;
 	pthread_cond_t	cond;
-}				simul_t;
+}				t_simul;
 
-typedef struct coder_s
+typedef struct s_coder
 {
 	int				id;
 	pthread_t		thread_id;
-	dongle_t		*left_dng;
-	dongle_t		*right_dng;
+	t_dongle		*left_dng;
+	t_dongle		*right_dng;
 	int				time_to_burnout;
 	int				time_to_compile;
 	int				time_to_debug;
@@ -77,75 +77,76 @@ typedef struct coder_s
 	int				compiles_done;
 	pthread_mutex_t	lock;
 	long long		last_compile_time;
-	simul_t			*simul;
-}				coder_t;
+	t_simul			*simul;
+}				t_coder;
 
-typedef struct req_s
+typedef struct s_req
 {
 	int			cod_id;
-	coder_t		*coder;
-	long long 	arr_t;
-	long long 	deadl;
-}				req_t;
+	t_coder		*coder;
+	long long	arr_t;
+	long long	deadl;
+}				t_req;
 
-typedef struct heap_s
+typedef struct s_heap
 {
-	req_t			*reqs;
-	int				size;
-	int				capacity;
-	char    		*sched;
-}				heap_t;
+	t_req	*reqs;
+	int		size;
+	int		capacity;
+	char	*sched;
+}				t_heap;
 
-typedef struct dongle_s
+typedef struct s_dongle
 {
 	int				num;
 	int				in_use;
 	long long		release;
 	int				cooldown;
 	pthread_mutex_t	lock;
-	heap_t			*heap;
-}				dongle_t;
+	t_heap			*heap;
+}				t_dongle;
 
-typedef struct monitor_s
+typedef struct s_monitor
 {
 	pthread_t	thread_id;
 	int			cod_count;
-	coder_t		*coders;
-	simul_t		*simul;
-} 				monitor_t;
+	t_coder		*coders;
+	t_simul		*simul;
+}				t_monitor;
 
 typedef struct s_components
 {
-	simul_t		*sim;
-	dongle_t	*dongles;
-	coder_t		*coders;
-	monitor_t	*mon;
+	t_simul		*sim;
+	t_dongle	*dongles;
+	t_coder		*coders;
+	t_monitor	*mon;
 }	t_components;
 
-void			parse_arg(int argc, char **argv, char **sched_vals, t_config *conf);
-void 			start_simul(t_config *cfg);
-simul_t			*init_simul(void);
-void			destroy_simul(simul_t *sim);
-int				is_simul_finished(simul_t *sim);
-void			log_event(simul_t	*sim, int id, char *msg, long long time);
-monitor_t		*init_monitor(
-	int coders_count,
-	simul_t *simul,
-	coder_t *coders);
-void			wake_up_all(simul_t *sim);
-coder_t			*init_coders(t_config *conf, simul_t *sim, dongle_t *don);
-void			destroy_coders(coder_t *coders, int count);
-dongle_t		*init_dongles(t_config *conf);
-void 			destroy_dongles(dongle_t *dongles, int coders_count);
-heap_t			*init_heap(int count, char *sched);
-void			heap_insert(heap_t *heap, req_t req);
-req_t			heap_extract(heap_t *heap, int index);
-void 			destroy_heap(heap_t *heap);
-void			print_heap(heap_t *heap, int don_id);
-long long 		get_cur_time(void);
-struct 			timespec get_abs_time(long long wake_up_time);
+void			parse_arg(int argc, char **argv, char **scheds, t_config *conf);
+void			start_simul(t_config *cfg);
+t_simul			*init_simul(void);
+void			destroy_simul(t_simul *sim);
+int				is_simul_finished(t_simul *sim);
+void			log_event(t_simul	*sim, int id, char *msg, long long time);
+t_monitor		*init_monitor(
+					int coders_count,
+					t_simul *simul,
+					t_coder *coders);
+void			wake_up_all(t_simul *sim);
+t_coder			*init_coders(t_config *conf, t_simul *sim, t_dongle *don);
+void			destroy_coders(t_coder *coders, int count);
+t_dongle		*init_dongles(t_config *conf);
+void			destroy_dongles(t_dongle *dongles, int coders_count);
+t_heap			*init_heap(int count, char *sched);
+void			heap_insert(t_heap *heap, t_req req);
+t_req			heap_extract(t_heap *heap, int index);
+void			destroy_heap(t_heap *heap);
+void			print_heap(t_heap *heap, int don_id);
+long long		get_cur_time(void);
+struct timespec	get_abs_time(long long wake_up_time);
 
 void			*mon_rout(void *arg);
 void			*coder_rout(void *arg);
+int				take_dongles(t_dongle *d1, t_dongle *d2, t_coder *coder);
 
 #endif

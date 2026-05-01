@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/27 14:14:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 11:53:21 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:25:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ static void	destroy_components(t_components *comp, int coders_count)
 	destroy_simul(comp->sim);
 }
 
-int	launch_coders(coder_t *coders, int count)
+int	launch_coders(t_coder *coders, int count)
 {
 	int	i;
 

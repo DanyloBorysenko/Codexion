@@ -6,24 +6,24 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 11:10:51 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:48:22 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:26:00 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	wake_up_all(simul_t *sim)
+void	wake_up_all(t_simul *sim)
 {
-	pthread_mutex_lock(&sim->sim_lock);
+	pthread_mutex_lock(&sim->lock);
 	sim->is_finished = 1;
 	pthread_cond_broadcast(&sim->cond);
-	pthread_mutex_unlock(&sim->sim_lock);
+	pthread_mutex_unlock(&sim->lock);
 	pthread_mutex_lock(&sim->sched_lock);
 	pthread_cond_broadcast(&sim->sched_cond);
 	pthread_mutex_unlock(&sim->sched_lock);
 }
 
-static int	is_burn_out(int count, coder_t *cods, simul_t *s)
+static int	is_burn_out(int count, t_coder *cods, t_simul *s)
 {
 	int			i;
 	long long	now;
@@ -49,20 +49,19 @@ static int	is_burn_out(int count, coder_t *cods, simul_t *s)
 
 void	*mon_rout(void *arg)
 {
-	monitor_t	*mon;
+	t_monitor	*mon;
 	int			finished;
 
-	mon = (monitor_t *)arg;
+	mon = (t_monitor *)arg;
 	finished = 0;
 	while (1)
 	{
-		pthread_mutex_lock(&mon->simul->sim_lock);
+		pthread_mutex_lock(&mon->simul->lock);
 		finished = mon->simul->finished_coders;
-		pthread_mutex_unlock(&mon->simul->sim_lock);
+		pthread_mutex_unlock(&mon->simul->lock);
 		if (finished == mon->cod_count)
 		{
 			wake_up_all(mon->simul);
-			printf("Finished = all\n");
 			return (NULL);
 		}
 		if (is_burn_out(mon->cod_count, mon->coders, mon->simul))
@@ -72,14 +71,14 @@ void	*mon_rout(void *arg)
 	return (NULL);
 }
 
-monitor_t	*init_monitor(
+t_monitor	*init_monitor(
 	int coders_count,
-	simul_t *simul,
-	coder_t *coders)
+	t_simul *simul,
+	t_coder *coders)
 {
-	monitor_t	*mon;
+	t_monitor	*mon;
 
-	mon = malloc(sizeof(monitor_t));
+	mon = malloc(sizeof(t_monitor));
 	if (!mon)
 		return (NULL);
 	mon->cod_count = coders_count;

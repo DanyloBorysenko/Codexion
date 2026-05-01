@@ -6,21 +6,26 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 11:38:23 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:25:42 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-heap_t	*init_heap(int count, char *sched)
-{
-	heap_t	*heap;
-	req_t	*reqs;
+int		req_cmp(t_req parent, t_req child, char *sched);
+void	swap_req(t_req *a, t_req *b);
+void	heapify_up(t_heap *heap, int index);
+void	heapify_down(t_heap *heap, int index);
 
-	heap = malloc(sizeof(heap_t));
+t_heap	*init_heap(int count, char *sched)
+{
+	t_heap	*heap;
+	t_req	*reqs;
+
+	heap = malloc(sizeof(t_heap));
 	if (!heap)
 		return (NULL);
-	reqs = malloc(sizeof(req_t) * count);
+	reqs = malloc(sizeof(t_req) * count);
 	if (!reqs)
 	{
 		free(heap);
@@ -33,7 +38,7 @@ heap_t	*init_heap(int count, char *sched)
 	return (heap);
 }
 
-void	destroy_heap(heap_t *heap)
+void	destroy_heap(t_heap *heap)
 {
 	if (!heap)
 		return ;
@@ -42,75 +47,7 @@ void	destroy_heap(heap_t *heap)
 	free(heap);
 }
 
-int	req_cmp(req_t parent, req_t child, char *sched)
-{
-	if (strcmp(sched, "fifo") == 0)
-	{
-		if (parent.arr_t > child.arr_t)
-			return (1);
-		else if (parent.arr_t < child.arr_t)
-			return (-1);
-	}
-	else
-	{
-		if (parent.deadl > child.deadl)
-			return (1);
-		else if (parent.deadl < child.deadl)
-			return (-1);
-	}
-	return (0);
-}
-
-static void	swap_req(req_t *a, req_t *b)
-{
-	req_t	tmp;
-
-	tmp = *a;
-	*a = *b;
-	*b = tmp;
-}
-
-void	heapify_up(heap_t *heap, int index)
-{
-	int	par_ind;
-
-	while (index > 0)
-	{
-		par_ind = (index - 1) / 2;
-		if (req_cmp(heap->reqs[par_ind], heap->reqs[index], heap->sched) <= 0)
-			break ;
-		swap_req(&heap->reqs[par_ind], &heap->reqs[index]);
-		index = par_ind;
-	}
-}
-
-void	heapify_down(heap_t *heap, int index)
-{
-	int	left;
-	int	right;
-	int	min;
-
-	while (1)
-	{
-		min = index;
-		left = (index * 2) + 1;
-		right = (index * 2) + 2;
-		if (left < heap->size
-			&& req_cmp(heap->reqs[min], heap->reqs[left], heap->sched) > 0)
-			min = left;
-		if (right < heap->size)
-		{
-			if (req_cmp(heap->reqs[min], heap->reqs[right], heap->sched) > 0)
-				min = right;
-		}
-		if (min == index)
-			break ;
-		swap_req(&heap->reqs[index], &heap->reqs[min]);
-		index = min;
-	}
-}
-
-void	heap_insert(heap_t *heap, req_t req)
+void	heap_insert(t_heap *heap, t_req req)
 {
 	int	child_ind;
 
@@ -122,9 +59,9 @@ void	heap_insert(heap_t *heap, req_t req)
 	heapify_up(heap, child_ind);
 }
 
-req_t	heap_extract(heap_t *heap, int index)
+t_req	heap_extract(t_heap *heap, int index)
 {
-	req_t	removed;
+	t_req	removed;
 
 	removed = heap->reqs[index];
 	if (index < heap->size - 1)
@@ -139,17 +76,23 @@ req_t	heap_extract(heap_t *heap, int index)
 	return (removed);
 }
 
-void	print_heap(heap_t *heap, int don_id)
+void	print_heap(t_heap *heap, int don_id)
 {
-	int	i;
-	req_t	req;
+	int			i;
+	int			cod_id;
+	long long	arr_t;
+	long long	deadl_t;
+	t_req		req;
 
 	i = 0;
 	printf("Dongle %d\n", don_id);
 	while (i < heap->size)
 	{
 		req = heap->reqs[i];
-		printf("cod_id: %d, arr_t: %llu, deadl: %llu\n", req.cod_id, req.arr_t, req.deadl);
+		cod_id = req.cod_id;
+		arr_t = req.arr_t;
+		deadl_t = req.deadl;
+		printf("cod: %d, arr: %llu, deadl: %llu\n", cod_id, arr_t, deadl_t);
 		i++;
 	}
 }

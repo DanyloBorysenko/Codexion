@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:53:21 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:25:02 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-static int	init_coder(coder_t *cod, dongle_t *don, t_config *conf, simul_t *s)
+static int	init_coder(t_coder *cod, t_dongle *don, t_config *conf, t_simul *s)
 {
 	int	coder_id;
 
@@ -32,12 +32,12 @@ static int	init_coder(coder_t *cod, dongle_t *don, t_config *conf, simul_t *s)
 	return (1);
 }
 
-coder_t	*init_coders(t_config *conf, simul_t *sim, dongle_t *don)
+t_coder	*init_coders(t_config *conf, t_simul *sim, t_dongle *don)
 {
-	coder_t	*coders;
+	t_coder	*coders;
 	int		i;
 
-	coders = malloc(sizeof(coder_t) * conf->num_of_cod);
+	coders = malloc(sizeof(t_coder) * conf->num_of_cod);
 	if (!coders)
 		return (NULL);
 	i = 0;
@@ -54,7 +54,7 @@ coder_t	*init_coders(t_config *conf, simul_t *sim, dongle_t *don)
 	return (coders);
 }
 
-void	destroy_coders(coder_t *coders, int count)
+void	destroy_coders(t_coder *coders, int count)
 {
 	int	i;
 

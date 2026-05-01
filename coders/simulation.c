@@ -6,22 +6,22 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/17 12:56:26 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:21:45 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:27:56 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-simul_t	*init_simul(void)
+t_simul	*init_simul(void)
 {
-	simul_t			*ptr;
+	t_simul			*ptr;
 	struct timeval	tv;
 	long long		time;
 
-	ptr = malloc(sizeof(simul_t));
+	ptr = malloc(sizeof(t_simul));
 	if (!ptr)
 		return (NULL);
-	pthread_mutex_init(&ptr->sim_lock, NULL);
+	pthread_mutex_init(&ptr->lock, NULL);
 	pthread_mutex_init(&ptr->print_lock, NULL);
 	pthread_mutex_init(&ptr->sched_lock, NULL);
 	pthread_cond_init(&ptr->sched_cond, NULL);
@@ -34,11 +34,11 @@ simul_t	*init_simul(void)
 	return (ptr);
 }
 
-void	destroy_simul(simul_t *sim)
+void	destroy_simul(t_simul *sim)
 {
 	if (!sim)
-        return;
-	pthread_mutex_destroy(&sim->sim_lock);
+		return ;
+	pthread_mutex_destroy(&sim->lock);
 	pthread_mutex_destroy(&sim->print_lock);
 	pthread_mutex_destroy(&sim->sched_lock);
 	pthread_cond_destroy(&sim->sched_cond);
@@ -46,12 +46,12 @@ void	destroy_simul(simul_t *sim)
 	free(sim);
 }
 
-int	is_simul_finished(simul_t *sim)
+int	is_simul_finished(t_simul *sim)
 {
 	int	is_finished;
 
-	pthread_mutex_lock(&sim->sim_lock);
+	pthread_mutex_lock(&sim->lock);
 	is_finished = sim->is_finished;
-	pthread_mutex_unlock(&sim->sim_lock);
+	pthread_mutex_unlock(&sim->lock);
 	return (is_finished);
 }

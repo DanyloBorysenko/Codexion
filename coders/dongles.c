@@ -6,13 +6,13 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 19:25:10 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/29 18:56:46 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:24:15 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	destroy_dongles(dongle_t *dongles, int count)
+void	destroy_dongles(t_dongle *dongles, int count)
 {
 	int	i;
 
@@ -28,7 +28,7 @@ void	destroy_dongles(dongle_t *dongles, int count)
 	free(dongles);
 }
 
-static int	init_dongle(dongle_t *d, int i, t_config *conf)
+static int	init_dongle(t_dongle *d, int i, t_config *conf)
 {
 	if (pthread_mutex_init(&d->lock, NULL) != 0)
 		return (0);
@@ -45,12 +45,12 @@ static int	init_dongle(dongle_t *d, int i, t_config *conf)
 	return (1);
 }
 
-dongle_t	*init_dongles(t_config *conf)
+t_dongle	*init_dongles(t_config *conf)
 {
-	dongle_t	*dongles;
+	t_dongle	*dongles;
 	int			i;
 
-	dongles = malloc(sizeof(dongle_t) * conf->num_of_cod);
+	dongles = malloc(sizeof(t_dongle) * conf->num_of_cod);
 	if (!dongles)
 		return (NULL);
 	i = 0;

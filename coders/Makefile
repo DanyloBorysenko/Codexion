@@ -8,13 +8,15 @@ MY_SRC = arg_parser.c    \
 		 start.c         \
 		 logger.c        \
 		 coders.c        \
-		 coders_logic.c  \
+		 coders_routine.c\
 		 coders_work.c   \
 		 dongles.c       \
 		 heap.c          \
+		 heap_utils.c    \
 		 simulation.c    \
 		 time_counter.c  \
-		 monitor.c
+		 monitor.c       \
+		 scheduler.c
 OBJ = $(MY_SRC:.c=.o)
 
 all: $(NAME)
