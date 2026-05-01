@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/01 16:05:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 16:25:02 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 23:50:58 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,10 @@ static int	get_state(t_dongle *d1, t_dongle *d2, t_coder *c)
 static int	do_take(t_dongle *d1, t_dongle *d2, t_coder *c)
 {
 	d1->in_use = 1;
-	d2->in_use = 1;
+	log_event(c->simul, c->id, "has taken a dongle", get_cur_time());
 	heap_extract(d1->heap, 0);
+	d2->in_use = 1;
+	log_event(c->simul, c->id, "has taken a dongle", get_cur_time());
 	heap_extract(d2->heap, 0);
 	pthread_mutex_unlock(&d2->lock);
 	pthread_mutex_unlock(&d1->lock);
@@ -70,8 +72,9 @@ int	take_dongles(t_dongle *d1, t_dongle *d2, t_coder *coder)
 {
 	int	state;
 
-	while (!coder->simul->is_finished)
+	while (!is_simul_finished(coder->simul))
 	{
+		pthread_mutex_unlock(&coder->simul->lock);
 		pthread_mutex_lock(&coder->simul->sched_lock);
 		pthread_mutex_lock(&d1->lock);
 		pthread_mutex_lock(&d2->lock);
