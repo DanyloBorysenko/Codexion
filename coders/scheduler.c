@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/01 16:05:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 23:50:58 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 23:59:44 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,6 @@ int	take_dongles(t_dongle *d1, t_dongle *d2, t_coder *coder)
 
 	while (!is_simul_finished(coder->simul))
 	{
-		pthread_mutex_unlock(&coder->simul->lock);
 		pthread_mutex_lock(&coder->simul->sched_lock);
 		pthread_mutex_lock(&d1->lock);
 		pthread_mutex_lock(&d2->lock);
