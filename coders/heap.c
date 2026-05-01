@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:40:03 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/27 18:19:59 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 11:38:23 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,16 +46,16 @@ int	req_cmp(req_t parent, req_t child, char *sched)
 {
 	if (strcmp(sched, "fifo") == 0)
 	{
-		if (parent.arr_time > child.arr_time)
+		if (parent.arr_t > child.arr_t)
 			return (1);
-		else if (parent.arr_time < child.arr_time)
+		else if (parent.arr_t < child.arr_t)
 			return (-1);
 	}
 	else
 	{
-		if (parent.deadline > child.deadline)
+		if (parent.deadl > child.deadl)
 			return (1);
-		else if (parent.deadline < child.deadline)
+		else if (parent.deadl < child.deadl)
 			return (-1);
 	}
 	return (0);
@@ -137,4 +137,19 @@ req_t	heap_extract(heap_t *heap, int index)
 	else
 		heap->size--;
 	return (removed);
+}
+
+void	print_heap(heap_t *heap, int don_id)
+{
+	int	i;
+	req_t	req;
+
+	i = 0;
+	printf("Dongle %d\n", don_id);
+	while (i < heap->size)
+	{
+		req = heap->reqs[i];
+		printf("cod_id: %d, arr_t: %llu, deadl: %llu\n", req.cod_id, req.arr_t, req.deadl);
+		i++;
+	}
 }

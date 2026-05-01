@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/28 14:21:20 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:26:39 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 12:39:22 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,12 +65,10 @@ void	release_dongles(dongle_t *left, dongle_t *right, simul_t *sim)
 	pthread_mutex_lock(&left->lock);
 	left->in_use = 0;
 	left->release = get_cur_time() + left->cooldown;
-	heap_extract(left->heap, 0);
 	pthread_mutex_unlock(&left->lock);
 	pthread_mutex_lock(&right->lock);
 	right->in_use = 0;
 	right->release = get_cur_time() + right->cooldown;
-	heap_extract(right->heap, 0);
 	pthread_mutex_unlock(&right->lock);
 	pthread_cond_broadcast(&sim->sched_cond);
 	pthread_mutex_unlock(&sim->sched_lock);

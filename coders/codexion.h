@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/04/30 15:53:00 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 11:38:23 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,10 +82,10 @@ typedef struct coder_s
 
 typedef struct req_s
 {
-	int			coder_id;
+	int			cod_id;
 	coder_t		*coder;
-	long long 	arr_time;
-	long long 	deadline;
+	long long 	arr_t;
+	long long 	deadl;
 }				req_t;
 
 typedef struct heap_s
@@ -141,6 +141,7 @@ heap_t			*init_heap(int count, char *sched);
 void			heap_insert(heap_t *heap, req_t req);
 req_t			heap_extract(heap_t *heap, int index);
 void 			destroy_heap(heap_t *heap);
+void			print_heap(heap_t *heap, int don_id);
 long long 		get_cur_time(void);
 struct 			timespec get_abs_time(long long wake_up_time);
 
