@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 16:26:00 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/02 10:02:25 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,13 +77,12 @@ typedef struct s_coder
 	int				compiles_done;
 	pthread_mutex_t	lock;
 	long long		last_compile_time;
-	t_simul			*simul;
+	t_simul			*sim;
 }				t_coder;
 
 typedef struct s_req
 {
 	int			cod_id;
-	t_coder		*coder;
 	long long	arr_t;
 	long long	deadl;
 }				t_req;
@@ -102,7 +101,6 @@ typedef struct s_dongle
 	int				in_use;
 	long long		release;
 	int				cooldown;
-	pthread_mutex_t	lock;
 	t_heap			*heap;
 }				t_dongle;
 

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/01 16:05:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 23:59:44 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/02 09:53:41 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,14 +34,12 @@ static int	get_state(t_dongle *d1, t_dongle *d2, t_coder *c)
 static int	do_take(t_dongle *d1, t_dongle *d2, t_coder *c)
 {
 	d1->in_use = 1;
-	log_event(c->simul, c->id, "has taken a dongle", get_cur_time());
+	log_event(c->sim, c->id, "has taken a dongle", get_cur_time());
 	heap_extract(d1->heap, 0);
 	d2->in_use = 1;
-	log_event(c->simul, c->id, "has taken a dongle", get_cur_time());
+	log_event(c->sim, c->id, "has taken a dongle", get_cur_time());
 	heap_extract(d2->heap, 0);
-	pthread_mutex_unlock(&d2->lock);
-	pthread_mutex_unlock(&d1->lock);
-	pthread_mutex_unlock(&c->simul->sched_lock);
+	pthread_mutex_unlock(&c->sim->sched_lock);
 	return (1);
 }
 
@@ -54,37 +52,26 @@ static void	wait_cooldown(t_dongle *d1, t_dongle *d2, t_coder *c)
 		max_release = d1->release;
 	else
 		max_release = d2->release;
-	pthread_mutex_unlock(&d2->lock);
-	pthread_mutex_unlock(&d1->lock);
 	wake_up = get_abs_time(max_release);
-	pthread_cond_timedwait(&c->simul->sched_cond,
-		&c->simul->sched_lock, &wake_up);
-}
-
-static void	wait_signal(t_dongle *d1, t_dongle *d2, t_coder *c)
-{
-	pthread_mutex_unlock(&d2->lock);
-	pthread_mutex_unlock(&d1->lock);
-	pthread_cond_wait(&c->simul->sched_cond, &c->simul->sched_lock);
+	pthread_cond_timedwait(&c->sim->sched_cond,
+		&c->sim->sched_lock, &wake_up);
 }
 
 int	take_dongles(t_dongle *d1, t_dongle *d2, t_coder *coder)
 {
 	int	state;
 
-	while (!is_simul_finished(coder->simul))
+	while (!is_simul_finished(coder->sim))
 	{
-		pthread_mutex_lock(&coder->simul->sched_lock);
-		pthread_mutex_lock(&d1->lock);
-		pthread_mutex_lock(&d2->lock);
+		pthread_mutex_lock(&coder->sim->sched_lock);
 		state = get_state(d1, d2, coder);
 		if (state == 2)
 			return (do_take(d1, d2, coder));
 		if (state == 1)
 			wait_cooldown(d1, d2, coder);
 		else
-			wait_signal(d1, d2, coder);
-		pthread_mutex_unlock(&coder->simul->sched_lock);
+			pthread_cond_wait(&coder->sim->sched_cond, &coder->sim->sched_lock);
+		pthread_mutex_unlock(&coder->sim->sched_lock);
 	}
 	return (0);
 }

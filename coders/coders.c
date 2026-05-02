@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 16:05:57 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 16:25:02 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/02 09:53:41 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ static int	init_coder(t_coder *cod, t_dongle *don, t_config *conf, t_simul *s)
 	cod->time_to_refactor = conf->time_to_refactor;
 	cod->num_of_comp_req = conf->num_of_comp_req;
 	cod->last_compile_time = s->start;
-	cod->simul = s;
+	cod->sim = s;
 	if (pthread_mutex_init(&cod->lock, NULL) != 0)
 		return (0);
 	return (1);

@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 12:27:48 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 16:25:25 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/02 10:05:01 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,20 +31,20 @@ static void	get_dongle_order(t_coder *coder, t_dongle **first, t_dongle **sec)
 	}
 }
 
-static void	insert_req(t_req req, t_dongle *first, t_dongle *sec)
+static void	insert_req(t_dongle *first, t_dongle *sec, t_coder *c)
 {
-	pthread_mutex_lock(&first->lock);
-	pthread_mutex_lock(&sec->lock);
-	heap_insert(first->heap, req);
-	heap_insert(sec->heap, req);
-	pthread_mutex_unlock(&sec->lock);
-	pthread_mutex_unlock(&first->lock);
+	t_req	request;
+
+	request.cod_id = c->id;
+	request.arr_t = get_cur_time();
+	request.deadl = c->last_compile_time + c->time_to_burnout;
+	heap_insert(first->heap, request);
+	heap_insert(sec->heap, request);
 }
 
 void	*coder_rout(void *arg)
 {
 	t_coder		*coder;
-	t_req		request;
 	t_dongle	*first;
 	t_dongle	*second;
 
@@ -54,11 +54,9 @@ void	*coder_rout(void *arg)
 		return (NULL);
 	while (1)
 	{
-		request.cod_id = coder->id;
-		request.arr_t = get_cur_time();
-		request.deadl = coder->last_compile_time + coder->time_to_burnout;
-		request.coder = coder;
-		insert_req(request, first, second);
+		pthread_mutex_lock(&coder->sim->sched_lock);
+		insert_req(first, second, coder);
+		pthread_mutex_unlock(&coder->sim->sched_lock);
 		if (!take_dongles(first, second, coder))
 			break ;
 		if (!compile(coder) || !debug(coder) || !refact(coder))

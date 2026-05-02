@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/01 15:08:38 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/01 16:25:42 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/01 16:52:48 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,11 +68,9 @@ void	heapify_down(t_heap *heap, int index)
 		if (left < heap->size
 			&& req_cmp(heap->reqs[min], heap->reqs[left], heap->sched) > 0)
 			min = left;
-		if (right < heap->size)
-		{
-			if (req_cmp(heap->reqs[min], heap->reqs[right], heap->sched) > 0)
-				min = right;
-		}
+		if (right < heap->size
+			&& req_cmp(heap->reqs[min], heap->reqs[right], heap->sched) > 0)
+			min = right;
 		if (min == index)
 			break ;
 		swap_req(&heap->reqs[index], &heap->reqs[min]);
