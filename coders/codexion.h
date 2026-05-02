@@ -6,7 +6,7 @@
 /*   By: danborys <borysenkodanyl@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 15:39:00 by danborys          #+#    #+#             */
-/*   Updated: 2026/05/02 10:02:25 by danborys         ###   ########.fr       */
+/*   Updated: 2026/05/02 10:20:21 by danborys         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,6 +145,6 @@ struct timespec	get_abs_time(long long wake_up_time);
 
 void			*mon_rout(void *arg);
 void			*coder_rout(void *arg);
-int				take_dongles(t_dongle *d1, t_dongle *d2, t_coder *coder);
+int				take_dongles(t_coder *coder);
 
 #endif
