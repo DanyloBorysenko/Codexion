@@ -1,4 +1,4 @@
-NAME=codexion
+NAME = codexion
 CC = cc
 FLAGS = -Wall -Wextra -Werror -pthread
 RM = rm -f
@@ -22,7 +22,7 @@ OBJ = $(MY_SRC:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -g -o $(NAME)
+	$(CC) $(FLAGS) $(OBJ) -o $(NAME)
 
 %.o: %.c $(HEADER)
 	$(CC) $(FLAGS) -c $< -o $@
